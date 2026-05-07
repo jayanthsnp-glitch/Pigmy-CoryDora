@@ -1,0 +1,14 @@
+# KiCad auto-backups
+*-backups/
+
+# KiCad internal history (auto-save, manages its own git)
+.history/
+
+# KiCad lock files (created while files are open)
+*.lck
+
+# Per-machine view preferences (zoom, layer visibility)
+*.kicad_prl
+
+# macOS
+.DS_Store

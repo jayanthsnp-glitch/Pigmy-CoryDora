@@ -619,7 +619,7 @@
     "pinned_symbol_libs": []
   },
   "meta": {
-    "filename": "mound.kicad_pro",
+    "filename": "pigmy-corydora.kicad_pro",
     "version": 3
   },
   "net_settings": {
@@ -786,18 +786,18 @@
     "subpart_id_separator": 0,
     "top_level_sheets": [
       {
-        "filename": "mound.kicad_sch",
-        "name": "mound",
+        "filename": "pigmy-corydora.kicad_sch",
+        "name": "pigmy-corydora",
         "uuid": "f4845b5a-c1f5-4b92-a3fd-dd76397e386f"
       }
     ],
-    "used_designators": "SW1-2",
+    "used_designators": "C1-2,#PWR1-8,U1,D1-2,SW1-3",
     "variants": []
   },
   "sheets": [
     [
       "f4845b5a-c1f5-4b92-a3fd-dd76397e386f",
-      "mound"
+      "pigmy-corydora"
     ]
   ],
   "text_variables": {},
