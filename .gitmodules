@@ -1,0 +1,3 @@
+[submodule "libraries/kleeb"]
+	path = libraries/kleeb
+	url = git@github.com:crides/kleeb.git
