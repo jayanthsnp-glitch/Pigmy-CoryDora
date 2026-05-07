@@ -1,6 +1,6 @@
 # Pigmy Corydora
 
-A compact 3-key macropad built around the Waveshare RP2040-Zero. Designed for desk use as a shortcut pad, mute button, or media controller — small enough to stay out of the way, with per-key RGB lighting.
+A compact 3-key macropad built around the Waveshare RP2040-Zero. Designed for desk use as a shortcut pad, mute button, or media controller small enough to stay out of the way.
 
 ## Features
 
@@ -23,22 +23,7 @@ A compact 3-key macropad built around the Waveshare RP2040-Zero. Designed for de
 
 ## PCB
 
-Designed in KiCad 8. Gerbers can be generated from `pigmy-corydora.kicad_pcb` and sent to any PCB fab (JLCPCB, PCBWay, OSHPark, etc.).
-
-## Firmware
-
-The RP2040-Zero runs [KMK](https://github.com/KMKfw/kmk_firmware) or [QMK](https://qmk.fm) (via RP2040 support). Flash by holding BOOT on the RP2040-Zero while plugging in over USB-C, then drop the `.uf2` firmware file onto the drive that appears.
-
-## Repository Structure
-
-```
-pigmy-corydora.kicad_sch   — schematic
-pigmy-corydora.kicad_pcb   — PCB layout
-pigmy-corydora.kicad_pro   — KiCad project file
-fp-lib-table               — footprint library references
-sym-lib-table              — symbol library references
-libraries/rp2040/          — RP2040-Zero footprint and symbol
-```
+Designed in KiCad 8. Gerbers can be generated from `pigmy-corydora.kicad_pcb` and sent to any PCB fab (Lions Circuit, JLCPCB, PCBWay, etc.).
 
 ## License
 
