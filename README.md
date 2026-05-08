@@ -1,12 +1,12 @@
 # Pigmy Corydora
 
-A compact 3-key macropad built around the Waveshare RP2040-Zero. Designed for desk use as a shortcut pad, mute button, or media controller small enough to stay out of the way.
+A compact 3-key macropad built around the [Glyph Mini RP2040](https://shop.pcbcupid.com/product/gdm001). Designed for desk use as a shortcut pad, mute button, or media controller small enough to stay out of the way.
 
 ## Features
 
 - 3× Cherry MX-compatible switches
 - 2× WS2812B RGB LEDs
-- Waveshare RP2040-Zero (RP2040, USB-C, onboard LED)
+- Glyph Mini RP2040 (PCB Cupid) (RP2040, USB-C, onboard LED)
 - 4× M2 mounting holes for case attachment
 - Hand-solderable SMD components (1206 caps)
 
@@ -14,7 +14,7 @@ A compact 3-key macropad built around the Waveshare RP2040-Zero. Designed for de
 
 | Ref | Component | Qty |
 |-----|-----------|-----|
-| RZ1 | Waveshare RP2040-Zero | 1 |
+| RZ1 | Glyph Mini RP2040 (PCB Cupid) | 1 |
 | SW1–SW3 | Cherry MX-compatible switch | 3 |
 | D1–D2 | WS2812B LED (PLCC-4, 5×5mm) | 2 |
 | R1 | 330Ω resistor (1206) | 1 |
