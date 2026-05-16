@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pigmy Corydora — Programmer</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:          #060a06;
+  --surf:        #0c110c;
+  --surf2:       #101610;
+  --surf3:       #141e14;
+  --border:      #192419;
+  --border2:     #223222;
+  --accent:      #00e676;
+  --accent2:     #69f0ae;
+  --accent-dim:  #00874a;
+  --text:        #a8c4a8;
+  --text-dim:    #5c7a5c;
+  --text-muted:  #384e38;
+  --red:         #ff5252;
+  --amber:       #ffb300;
+  --blue:        #448aff;
+  --white:       #d4ead4;
+  --glow-green:  rgba(0, 230, 118, 0.25);
+  --font-mono:   'JetBrains Mono', monospace;
+  --font-vt:     'VT323', monospace;
+}
+
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; overflow-x: hidden; }
+
+/* PCB grid + scanlines */
+body::before {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+}
+body::after {
+  content: '';
+  position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(rgba(0,230,118,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(0,230,118,0.025) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+.app {
+  position: relative; z-index: 1;
+  max-width: 980px; margin: 0 auto; min-height: 100vh;
+  display: flex; flex-direction: column;
+  padding: 0 28px 28px;
+}
+
+/* ── Header ── */
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 22px 0 18px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 36px;
+}
+.logo { display: flex; align-items: baseline; gap: 14px; }
+.logo-title {
+  font-family: var(--font-vt); font-size: 36px; letter-spacing: 3px;
+  color: var(--accent); line-height: 1;
+  text-shadow: 0 0 24px rgba(0,230,118,0.4), 0 0 60px rgba(0,230,118,0.1);
+}
+.logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 4px; text-transform: uppercase; }
+.header-right { display: flex; align-items: center; gap: 14px; }
+
+.status-pill {
+  display: flex; align-items: center; gap: 7px;
+  padding: 5px 14px; border: 1px solid var(--border); border-radius: 2px;
+  font-size: 10px; letter-spacing: 2px; color: var(--text-muted);
+  transition: all 0.3s;
+}
+.status-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--text-muted); flex-shrink: 0; transition: all 0.3s;
+}
+.status-pill.live { border-color: var(--accent-dim); color: var(--accent2); }
+.status-pill.live .status-dot {
+  background: var(--accent);
+  box-shadow: 0 0 6px var(--accent), 0 0 12px rgba(0,230,118,0.4);
+  animation: dot-pulse 2s infinite;
+}
+@keyframes dot-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+/* ── Buttons ── */
+.btn {
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
+  text-transform: uppercase; padding: 8px 16px;
+  border: 1px solid var(--border2); background: var(--surf2);
+  color: var(--text); cursor: pointer; border-radius: 2px;
+  transition: all 0.15s; user-select: none;
+}
+.btn:hover { border-color: var(--accent-dim); color: var(--accent); background: rgba(0,230,118,0.04); }
+.btn:active { transform: translateY(1px); }
+.btn:disabled { opacity: 0.28; pointer-events: none; }
+.btn.danger { border-color: #3a1c1c; color: var(--red); background: rgba(255,82,82,0.04); }
+.btn.danger:hover { background: rgba(255,82,82,0.1); border-color: var(--red); }
+.btn.pulsing { animation: btn-pulse 0.9s ease infinite; }
+@keyframes btn-pulse { 0%,100%{border-color:var(--accent-dim)} 50%{border-color:var(--border)} }
+
+.btn-cta {
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 11px 28px;
+  border: 1px solid var(--accent-dim); background: rgba(0,230,118,0.07);
+  color: var(--accent); cursor: pointer; border-radius: 2px;
+  transition: all 0.2s; user-select: none;
+}
+.btn-cta:hover { background: rgba(0,230,118,0.14); box-shadow: 0 0 20px rgba(0,230,118,0.15); }
+.btn-cta:active { transform: translateY(1px); }
+.btn-cta:disabled { opacity: 0.28; pointer-events: none; }
+
+/* ── Section headers ── */
+.section-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
+.section-label { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
+.section-rule { flex: 1; height: 1px; background: var(--border); }
+.btn-toggle { padding: 4px 12px; font-size: 10px; letter-spacing: 1.5px; }
+
+/* ── Key Cards ── */
+.keys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
+.key-card {
+  background: var(--surf); border: 1px solid var(--border);
+  border-radius: 3px; overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  animation: rise 0.45s ease both;
+}
+.key-card:nth-child(1){animation-delay:0.05s}
+.key-card:nth-child(2){animation-delay:0.1s}
+.key-card:nth-child(3){animation-delay:0.15s}
+@keyframes rise { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+.key-card:hover { border-color: var(--border2); }
+
+.key-cap {
+  position: relative;
+  background: linear-gradient(160deg, var(--surf3) 0%, var(--surf2) 100%);
+  border-bottom: 1px solid var(--border);
+  padding: 18px 18px 14px;
+  display: flex; align-items: flex-start; justify-content: space-between;
+  user-select: none;
+}
+.key-cap::after {
+  content: '';
+  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border2), transparent);
+}
+.key-cap-left { display: flex; flex-direction: column; gap: 4px; }
+.key-num { font-family: var(--font-vt); font-size: 32px; color: var(--white); line-height: 1; letter-spacing: 1px; }
+.key-tag { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; }
+.led-orb {
+  width: 13px; height: 13px; border-radius: 50%;
+  border: 1px solid rgba(255,255,255,0.08);
+  transition: background 0.3s, box-shadow 0.3s;
+  flex-shrink: 0; margin-top: 3px;
+}
+
+.key-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
+.field-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+
+select.action-sel {
+  width: 100%; font-family: var(--font-mono); font-size: 12px;
+  color: var(--text); background: var(--surf3);
+  border: 1px solid var(--border2); border-radius: 2px;
+  padding: 7px 28px 7px 10px; cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23384e38' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 10px center;
+  transition: border-color 0.15s;
+}
+select.action-sel:hover { border-color: var(--accent-dim); }
+select.action-sel:focus { outline: none; border-color: var(--accent); }
+select.action-sel option { background: #0c150c; color: var(--text); }
+select.action-sel optgroup { background: #08100a; color: var(--text-muted); font-size: 11px; }
+
+.color-row { display: flex; align-items: center; gap: 10px; }
+.swatch-wrap { position: relative; width: 30px; height: 30px; flex-shrink: 0; cursor: pointer; }
+.swatch-wrap input[type="color"] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
+.swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.08); pointer-events: none; transition: box-shadow 0.3s; }
+.swatch-wrap:hover .swatch { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
+.color-hex { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
+
+/* ── LED Panel ── */
+.led-panel {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 3px;
+  padding: 20px; margin-bottom: 28px;
+  animation: rise 0.45s 0.2s ease both;
+}
+.led-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+
+.breathe-swatches { display: flex; gap: 14px; align-items: flex-end; padding-top: 6px; }
+.breathe-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.breathe-lbl { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
+
+.slider-group { display: flex; flex-direction: column; gap: 18px; }
+.slider-row { display: flex; flex-direction: column; gap: 7px; }
+.slider-hdr { display: flex; justify-content: space-between; align-items: baseline; }
+.slider-val { font-size: 12px; color: var(--accent); letter-spacing: 1px; }
+
+input[type="range"] {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 2px;
+  background: var(--border2); border-radius: 2px; outline: none; cursor: pointer;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
+  background: var(--accent); cursor: pointer; transition: box-shadow 0.2s;
+  box-shadow: 0 0 6px rgba(0,230,118,0.5);
+}
+input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(0,230,118,0.8); }
+
+/* ── Action Bar ── */
+.action-bar {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 28px;
+  animation: rise 0.45s 0.25s ease both;
+}
+
+/* ── Terminal ── */
+.terminal {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 3px;
+  overflow: hidden; display: flex; flex-direction: column;
+  min-height: 130px; max-height: 190px;
+  animation: rise 0.45s 0.3s ease both;
+}
+.term-bar {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 7px 12px; background: var(--surf2); border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+.term-title { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; }
+.term-lights { display: flex; gap: 5px; }
+.term-light { width: 8px; height: 8px; border-radius: 50%; }
+.term-body { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 1px; }
+.term-body::-webkit-scrollbar { width: 3px; }
+.term-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.log-entry { display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono); }
+.log-t { color: var(--text-muted); flex-shrink: 0; }
+.log-m { }
+.log-entry.ok    .log-m { color: var(--accent2); }
+.log-entry.info  .log-m { color: var(--text-dim); }
+.log-entry.warn  .log-m { color: var(--amber); }
+.log-entry.error .log-m { color: var(--red); }
+
+/* ── No-serial overlay ── */
+.no-serial {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(6,10,6,0.95); align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.no-serial-box {
+  background: var(--surf); border: 1px solid var(--border); border-radius: 4px;
+  padding: 36px; max-width: 440px; text-align: center;
+}
+.no-serial-title { font-family: var(--font-vt); font-size: 28px; color: var(--amber); margin-bottom: 14px; }
+.no-serial-body { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
+.no-serial-body a { color: var(--accent); }
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- ── Header ── -->
+  <header class="header">
+    <div class="logo">
+      <span class="logo-title">PIGMY CORYDORA</span>
+      <span class="logo-sub">Programmer v1.0</span>
+    </div>
+    <div class="header-right">
+      <div class="status-pill" id="statusPill">
+        <div class="status-dot"></div>
+        <span id="statusTxt">DISCONNECTED</span>
+      </div>
+      <button class="btn" id="connectBtn" onclick="toggleConnect()">CONNECT</button>
+    </div>
+  </header>
+
+  <!-- ── Keys ── -->
+  <div>
+    <div class="section-hdr">
+      <span class="section-label">Key Mapping</span>
+      <div class="section-rule"></div>
+    </div>
+    <div class="keys-grid" id="keysGrid"></div>
+  </div>
+
+  <!-- ── LED Panel ── -->
+  <div>
+    <div class="section-hdr">
+      <span class="section-label">LED Animation</span>
+      <div class="section-rule"></div>
+      <button class="btn btn-toggle" id="ledToggle" onclick="toggleLED()">SHOW</button>
+    </div>
+    <div class="led-panel" id="ledPanel" style="display:none">
+      <div class="led-grid">
+        <div>
+          <div class="field-lbl">Breathing Color Cycle</div>
+          <div class="breathe-swatches" id="breatheSwatches"></div>
+        </div>
+        <div class="slider-group">
+          <div class="slider-row">
+            <div class="slider-hdr">
+              <span class="field-lbl">Breathe Period</span>
+              <span class="slider-val" id="periodVal">2.0s</span>
+            </div>
+            <input type="range" id="periodSlider" min="0.5" max="8" step="0.1" value="2.0"
+              oninput="onPeriod(this)">
+          </div>
+          <div class="slider-row">
+            <div class="slider-hdr">
+              <span class="field-lbl">LED Brightness</span>
+              <span class="slider-val" id="brightVal">25%</span>
+            </div>
+            <input type="range" id="brightSlider" min="0" max="100" step="1" value="25"
+              oninput="onBrightness(this)">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Action Bar ── -->
+  <div class="action-bar">
+    <button class="btn" id="readBtn" onclick="readDevice()" disabled>READ FROM DEVICE</button>
+    <button class="btn-cta" id="saveBtn" onclick="saveDevice()" disabled>SAVE TO DEVICE</button>
+  </div>
+
+  <!-- ── Terminal ── -->
+  <div class="terminal">
+    <div class="term-bar">
+      <span class="term-title">Serial Log</span>
+      <div class="term-lights">
+        <div class="term-light" style="background:#ff5f57"></div>
+        <div class="term-light" style="background:#ffbd2e"></div>
+        <div class="term-light" style="background:#28c840"></div>
+      </div>
+    </div>
+    <div class="term-body" id="termBody"></div>
+  </div>
+
+</div>
+
+<!-- ── No Web Serial overlay ── -->
+<div class="no-serial" id="noSerial">
+  <div class="no-serial-box">
+    <div class="no-serial-title">BROWSER NOT SUPPORTED</div>
+    <p class="no-serial-body">
+      The Web Serial API requires <strong>Chrome 89+</strong> or <strong>Edge 89+</strong>.<br><br>
+      Open this file in
+      <a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>
+      and make sure you are not using an incognito window.
+    </p>
+  </div>
+</div>
+
+<script>
+// ─────────────────────────────────────────────────────────────────────────────
+// Action catalogue
+// Format: "type:CODE:MOD1,MOD2"
+// ─────────────────────────────────────────────────────────────────────────────
+const ACTIONS = [
+  { group: 'Media', items: [
+    { label: 'Mute',              val: 'cc:MUTE:' },
+    { label: 'Volume Up',         val: 'cc:VOLUME_INCREMENT:' },
+    { label: 'Volume Down',       val: 'cc:VOLUME_DECREMENT:' },
+    { label: 'Play / Pause',      val: 'cc:PLAY_PAUSE:' },
+    { label: 'Next Track',        val: 'cc:SCAN_NEXT_TRACK:' },
+    { label: 'Prev Track',        val: 'cc:SCAN_PREVIOUS_TRACK:' },
+    { label: 'Fast Forward',      val: 'cc:FAST_FORWARD:' },
+    { label: 'Rewind',            val: 'cc:REWIND:' },
+    { label: 'Eject',             val: 'cc:EJECT:' },
+  ]},
+  { group: 'Display', items: [
+    { label: 'Brightness Up',     val: 'cc:BRIGHTNESS_INCREMENT:' },
+    { label: 'Brightness Down',   val: 'cc:BRIGHTNESS_DECREMENT:' },
+  ]},
+  { group: 'Shortcuts', items: [
+    { label: 'Copy',              val: 'key:C:LEFT_CONTROL' },
+    { label: 'Paste',             val: 'key:V:LEFT_CONTROL' },
+    { label: 'Cut',               val: 'key:X:LEFT_CONTROL' },
+    { label: 'Undo',              val: 'key:Z:LEFT_CONTROL' },
+    { label: 'Redo',              val: 'key:Z:LEFT_CONTROL,LEFT_SHIFT' },
+    { label: 'Save',              val: 'key:S:LEFT_CONTROL' },
+    { label: 'Select All',        val: 'key:A:LEFT_CONTROL' },
+    { label: 'Find',              val: 'key:F:LEFT_CONTROL' },
+    { label: 'New Tab',           val: 'key:T:LEFT_CONTROL' },
+    { label: 'Close Tab',         val: 'key:W:LEFT_CONTROL' },
+    { label: 'Screenshot',        val: 'key:PRINT_SCREEN:' },
+  ]},
+  { group: 'Keys A–Z', items: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(k => ({
+    label: k, val: `key:${k}:`
+  }))},
+  { group: 'Function Keys', items: Array.from({length:12},(_,i) => ({
+    label: `F${i+1}`, val: `key:F${i+1}:`
+  }))},
+  { group: 'Special', items: [
+    { label: 'Space',             val: 'key:SPACE:' },
+    { label: 'Enter',             val: 'key:ENTER:' },
+    { label: 'Tab',               val: 'key:TAB:' },
+    { label: 'Escape',            val: 'key:ESCAPE:' },
+    { label: 'Backspace',         val: 'key:BACKSPACE:' },
+    { label: 'Delete',            val: 'key:DELETE:' },
+    { label: 'Up Arrow',          val: 'key:UP_ARROW:' },
+    { label: 'Down Arrow',        val: 'key:DOWN_ARROW:' },
+    { label: 'Left Arrow',        val: 'key:LEFT_ARROW:' },
+    { label: 'Right Arrow',       val: 'key:RIGHT_ARROW:' },
+    { label: 'Home',              val: 'key:HOME:' },
+    { label: 'End',               val: 'key:END:' },
+    { label: 'Page Up',           val: 'key:PAGE_UP:' },
+    { label: 'Page Down',         val: 'key:PAGE_DOWN:' },
+  ]},
+];
+
+// ─────────────────────────────────────────────────────────────────────────────
+// State
+// ─────────────────────────────────────────────────────────────────────────────
+const DEFAULTS = {
+  keys: [
+    { type:'cc', code:'MUTE',             modifiers:[] },
+    { type:'cc', code:'VOLUME_DECREMENT', modifiers:[] },
+    { type:'cc', code:'VOLUME_INCREMENT', modifiers:[] },
+  ],
+  key_colors:     [[255,40,40],[40,100,255],[40,220,80]],
+  breathe_colors: [[180,40,40],[40,180,40],[40,40,180]],
+  breathe_period: 2.0,
+  brightness:     0.25,
+};
+
+let cfg       = deepCopy(DEFAULTS);
+let port      = null;
+let sw        = null;  // serial writer
+let activeRdr = null;
+let rxBuf     = new Uint8Array(0);
+let rxReading = false;
+
+function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Colour helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function toHex([r,g,b]) {
+  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
+}
+function fromHex(h) {
+  const n = parseInt(h.slice(1),16);
+  return [(n>>16)&255,(n>>8)&255,n&255];
+}
+function glowStyle(hex, size=10) {
+  return `background:${hex}; box-shadow:0 0 ${size}px ${hex}`;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Action value helpers
+// ─────────────────────────────────────────────────────────────────────────────
+function parseVal(val) {
+  const [type, code, modStr] = val.split(':');
+  return { type, code, modifiers: modStr ? modStr.split(',').filter(Boolean) : [] };
+}
+function toVal({ type, code, modifiers }) {
+  return `${type}:${code}:${(modifiers||[]).join(',')}`;
+}
+function buildSelectHTML() {
+  return ACTIONS.map(g =>
+    `<optgroup label="${g.group}">${g.items.map(i =>
+      `<option value="${i.val}">${i.label}</option>`
+    ).join('')}</optgroup>`
+  ).join('');
+}
+const SEL_HTML = buildSelectHTML();
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Render
+// ─────────────────────────────────────────────────────────────────────────────
+function renderKeys() {
+  const grid = document.getElementById('keysGrid');
+  grid.innerHTML = cfg.keys.map((key, i) => {
+    const hex = toHex(cfg.key_colors[i]);
+    return `
+      <div class="key-card">
+        <div class="key-cap">
+          <div class="key-cap-left">
+            <span class="key-num">SW ${String(i+1).padStart(2,'0')}</span>
+            <span class="key-tag">Key ${i+1}</span>
+          </div>
+          <div class="led-orb" id="orb${i}" style="${glowStyle(hex,8)}"></div>
+        </div>
+        <div class="key-body">
+          <div>
+            <div class="field-lbl">Action</div>
+            <select class="action-sel" id="sel${i}" onchange="onAction(${i},this.value)">
+              ${SEL_HTML}
+            </select>
+          </div>
+          <div>
+            <div class="field-lbl">Key Color</div>
+            <div class="color-row">
+              <div class="swatch-wrap">
+                <div class="swatch" id="sw${i}" style="${glowStyle(hex,7)}"></div>
+                <input type="color" value="${hex}" oninput="onKeyColor(${i},this.value)">
+              </div>
+              <span class="color-hex" id="hex${i}">${hex.toUpperCase()}</span>
+            </div>
+          </div>
+        </div>
+      </div>`;
+  }).join('');
+
+  // Restore select values after DOM is built
+  cfg.keys.forEach((key, i) => {
+    const el = document.getElementById(`sel${i}`);
+    if (el) {
+      el.value = toVal(key);
+      if (!el.value) el.value = 'cc:MUTE:';
+    }
+  });
+}
+
+function renderBreathe() {
+  const row = document.getElementById('breatheSwatches');
+  row.innerHTML = cfg.breathe_colors.map((c, i) => {
+    const hex = toHex(c);
+    return `
+      <div class="breathe-item">
+        <div class="swatch-wrap">
+          <div class="swatch" id="bs${i}" style="${glowStyle(hex,7)}"></div>
+          <input type="color" value="${hex}" oninput="onBreathe(${i},this.value)">
+        </div>
+        <span class="breathe-lbl">C${i+1}</span>
+      </div>`;
+  }).join('');
+}
+
+function renderSliders() {
+  const ps = document.getElementById('periodSlider');
+  const pv = document.getElementById('periodVal');
+  ps.value = cfg.breathe_period;
+  pv.textContent = cfg.breathe_period.toFixed(1) + 's';
+
+  const bs = document.getElementById('brightSlider');
+  const bv = document.getElementById('brightVal');
+  bs.value = Math.round(cfg.brightness * 100);
+  bv.textContent = Math.round(cfg.brightness * 100) + '%';
+}
+
+function renderAll() { renderKeys(); renderBreathe(); renderSliders(); }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event handlers
+// ─────────────────────────────────────────────────────────────────────────────
+function toggleLED() {
+  const panel = document.getElementById('ledPanel');
+  const btn   = document.getElementById('ledToggle');
+  const open  = panel.style.display === 'none';
+  panel.style.display = open ? '' : 'none';
+  btn.textContent = open ? 'HIDE' : 'SHOW';
+}
+
+function onAction(i, val)      { cfg.keys[i] = parseVal(val); }
+function onPeriod(el)          { cfg.breathe_period = parseFloat(el.value); document.getElementById('periodVal').textContent = cfg.breathe_period.toFixed(1)+'s'; }
+function onBrightness(el)      { cfg.brightness = parseInt(el.value)/100; document.getElementById('brightVal').textContent = el.value+'%'; }
+
+function onKeyColor(i, hex) {
+  cfg.key_colors[i] = fromHex(hex);
+  document.getElementById(`sw${i}`).style.cssText  = glowStyle(hex,7);
+  document.getElementById(`hex${i}`).textContent   = hex.toUpperCase();
+  document.getElementById(`orb${i}`).style.cssText = glowStyle(hex,8);
+}
+
+function onBreathe(i, hex) {
+  cfg.breathe_colors[i] = fromHex(hex);
+  document.getElementById(`bs${i}`).style.cssText = glowStyle(hex,7);
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Serial — connection
+// ─────────────────────────────────────────────────────────────────────────────
+async function toggleConnect() {
+  port ? await doDisconnect() : await doConnect();
+}
+
+async function doConnect() {
+  const btn = document.getElementById('connectBtn');
+  btn.textContent = 'CONNECTING…'; btn.classList.add('pulsing'); btn.disabled = true;
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    sw = port.writable.getWriter();
+    rxBuf = new Uint8Array(0);
+    rxReading = true;
+    startReadLoop();
+    setConnected(true);
+    tlog('Device connected', 'ok');
+    tlog('Click "Read from Device" to load current config', 'info');
+  } catch(e) {
+    tlog('Connection failed: ' + e.message, 'error');
+    btn.classList.remove('pulsing'); btn.textContent = 'CONNECT'; btn.disabled = false;
+    port = null;
+  }
+}
+
+async function doDisconnect() {
+  rxReading = false;
+  if (activeRdr) { try { await activeRdr.cancel(); } catch(_){} activeRdr = null; }
+  if (sw)        { try { sw.releaseLock(); } catch(_){} sw = null; }
+  if (port)      { try { await port.close(); } catch(_){} port = null; }
+  setConnected(false);
+  tlog('Disconnected', 'warn');
+}
+
+function setConnected(on) {
+  const btn   = document.getElementById('connectBtn');
+  const pill  = document.getElementById('statusPill');
+  const stxt  = document.getElementById('statusTxt');
+  const readB = document.getElementById('readBtn');
+  const saveB = document.getElementById('saveBtn');
+  btn.classList.remove('pulsing'); btn.disabled = false;
+  if (on) {
+    btn.textContent = 'DISCONNECT'; btn.classList.add('danger');
+    pill.classList.add('live'); stxt.textContent = 'CONNECTED';
+    readB.disabled = false; saveB.disabled = false;
+  } else {
+    btn.textContent = 'CONNECT'; btn.classList.remove('danger');
+    pill.classList.remove('live'); stxt.textContent = 'DISCONNECTED';
+    readB.disabled = true; saveB.disabled = true;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Serial — low-level read loop
+// ─────────────────────────────────────────────────────────────────────────────
+function startReadLoop() {
+  (async () => {
+    activeRdr = port.readable.getReader();
+    try {
+      while (rxReading) {
+        const { value, done } = await activeRdr.read();
+        if (done) break;
+        const next = new Uint8Array(rxBuf.length + value.length);
+        next.set(rxBuf); next.set(value, rxBuf.length);
+        rxBuf = next;
+      }
+    } catch(_) {}
+    finally { try { activeRdr.releaseLock(); } catch(_){} activeRdr = null; }
+  })();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Serial — raw REPL execution
+// ─────────────────────────────────────────────────────────────────────────────
+const delay = ms => new Promise(r => setTimeout(r, ms));
+
+async function serialWrite(str) {
+  await sw.write(new TextEncoder().encode(str));
+}
+
+// Poll rxBuf until `marker` appears or timeout expires.
+async function waitForInBuf(marker, timeout = 3000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    if (new TextDecoder().decode(rxBuf).includes(marker)) return;
+    await delay(30);
+  }
+  const snapshot = new TextDecoder().decode(rxBuf).slice(-120);
+  throw new Error(`Timeout waiting for device (got: ${JSON.stringify(snapshot)})`);
+}
+
+// Poll until we have seen two 0x04 (EOT) bytes in rxBuf — marks end of
+// CircuitPython raw-REPL output (stdout\x04 + stderr\x04).
+async function waitForTwoEOT(timeout = 5000) {
+  const deadline = Date.now() + timeout;
+  while (Date.now() < deadline) {
+    let n = 0;
+    for (const b of rxBuf) { if (b === 0x04 && ++n === 2) return; }
+    await delay(30);
+  }
+  throw new Error('Execution timed out waiting for device to finish');
+}
+
+async function execRaw(code) {
+  // ── 1. Interrupt running code ──────────────────────────────────────────
+  rxBuf = new Uint8Array(0);
+  await serialWrite('\x03\x03');
+  await delay(150);
+
+  // ── 2. Enter raw REPL, wait for prompt '>' ─────────────────────────────
+  rxBuf = new Uint8Array(0);
+  await serialWrite('\x01');
+  try {
+    await waitForInBuf('>');
+  } catch(_) {
+    throw new Error('Could not enter raw REPL — is CircuitPython running?');
+  }
+
+  // ── 3. Send code block, wait for 'OK' (execution started) ──────────────
+  rxBuf = new Uint8Array(0);
+  await serialWrite(code + '\x04');
+  try {
+    await waitForInBuf('OK', 2000);
+  } catch(_) {
+    throw new Error('Device did not acknowledge code — try reconnecting');
+  }
+
+  // ── 4. Wait for both EOT bytes (stdout done + stderr done) ─────────────
+  await waitForTwoEOT(5000);
+
+  // ── 5. Capture, exit raw REPL, parse ───────────────────────────────────
+  const raw = new TextDecoder().decode(rxBuf);
+  rxBuf = new Uint8Array(0);
+  await serialWrite('\x02');
+  await delay(100);
+
+  const okIdx = raw.indexOf('OK');
+  const rest   = raw.slice(okIdx + 2);
+  const eot1   = rest.indexOf('\x04');
+  const stdout = eot1 >= 0 ? rest.slice(0, eot1) : rest;
+  const tail   = eot1 >= 0 ? rest.slice(eot1 + 1) : '';
+  const eot2   = tail.indexOf('\x04');
+  const stderr = (eot2 >= 0 ? tail.slice(0, eot2) : tail).trim();
+
+  if (stderr) throw new Error(stderr);
+  return stdout.trim();
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Device operations
+// ─────────────────────────────────────────────────────────────────────────────
+async function readDevice() {
+  const btn = document.getElementById('readBtn');
+  btn.disabled = true; btn.textContent = 'READING…';
+  tlog('Reading config.json…', 'info');
+  try {
+    const code = [
+      'try:',
+      '  import json,sys',
+      '  f=open("/config.json"); sys.stdout.write(f.read()); f.close()',
+      'except Exception as e:',
+      '  print("{}")',
+    ].join('\n');
+    const out = await execRaw(code);
+    const start = out.indexOf('{');
+    if (start !== -1) {
+      const loaded = JSON.parse(out.slice(start));
+      cfg = Object.assign(deepCopy(DEFAULTS), loaded);
+      renderAll();
+      tlog('Config loaded from device', 'ok');
+    } else {
+      tlog('No config.json found — showing firmware defaults', 'warn');
+    }
+  } catch(e) {
+    tlog('Read error: ' + e.message, 'error');
+  }
+  btn.disabled = false; btn.textContent = 'READ FROM DEVICE';
+}
+
+async function saveDevice() {
+  const btn = document.getElementById('saveBtn');
+  btn.disabled = true; btn.textContent = 'SAVING…';
+  tlog('Writing config.json to device…', 'info');
+  try {
+    // Single-quote safe: our JSON values are numbers and known uppercase strings only
+    const json = JSON.stringify(cfg).replace(/'/g, "\\'");
+    const code = [
+      `f=open('/config.json','w')`,
+      `f.write('${json}')`,
+      `f.close()`,
+      `print('ok')`,
+    ].join('\n');
+    const out = await execRaw(code);
+    if (out.includes('ok')) {
+      tlog('Config saved successfully', 'ok');
+      tlog('Resetting device…', 'info');
+      try { await execRaw('import microcontroller\nmicrocontroller.reset()'); } catch(_) {}
+      tlog('Device restarted — new config is live', 'ok');
+    } else {
+      tlog('Unexpected response: ' + out, 'warn');
+    }
+  } catch(e) {
+    tlog('Save error: ' + e.message, 'error');
+    if (e.message.includes('Read-only') || e.message.includes('Errno 30')) {
+      tlog('Hint: unplug the device, then replug WITHOUT holding any key', 'warn');
+      tlog('Holding SW1 during boot shows the USB drive — normal boot hides it', 'warn');
+    }
+  }
+  btn.disabled = false; btn.textContent = 'SAVE TO DEVICE';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Terminal log
+// ─────────────────────────────────────────────────────────────────────────────
+function tlog(msg, type = 'info') {
+  const el = document.getElementById('termBody');
+  const t = new Date().toTimeString().slice(0,8);
+  const row = document.createElement('div');
+  row.className = `log-entry ${type}`;
+  row.innerHTML = `<span class="log-t">${t}</span><span class="log-m">&gt; ${msg}</span>`;
+  el.appendChild(row);
+  el.scrollTop = el.scrollHeight;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Init
+// ─────────────────────────────────────────────────────────────────────────────
+if (!('serial' in navigator)) {
+  document.getElementById('noSerial').style.display = 'flex';
+}
+renderAll();
+tlog('Programmer ready', 'ok');
+tlog('Connect device via USB, then click CONNECT', 'info');
+</script>
+</body>
+</html>

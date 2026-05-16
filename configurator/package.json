@@ -1,0 +1,11 @@
+{
+  "name": "pigmy-corydora-programmer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "serve . --listen 5173 --no-clipboard"
+  },
+  "devDependencies": {
+    "serve": "^14.2.4"
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "keys": [
+    {"type": "cc", "code": "MUTE",             "modifiers": []},
+    {"type": "cc", "code": "VOLUME_DECREMENT", "modifiers": []},
+    {"type": "cc", "code": "VOLUME_INCREMENT", "modifiers": []}
+  ],
+  "key_colors":     [[255, 40, 40], [40, 100, 255], [40, 220, 80]],
+  "breathe_colors": [[180, 40, 40], [40, 180, 40],  [40, 40, 180]],
+  "breathe_period": 2.0,
+  "brightness":     0.25
+}

@@ -656,7 +656,7 @@
       "gencad": "",
       "idf": "",
       "netlist": "",
-      "plot": "",
+      "plot": "gerber/",
       "pos_files": "",
       "specctra_dsn": "",
       "step": "",
@@ -784,6 +784,14 @@
       "version": 1
     },
     "net_format_name": "",
+    "ngspice": {
+      "fix_include_paths": true,
+      "meta": {
+        "version": 0
+      },
+      "model_mode": 4,
+      "workbook_filename": ""
+    },
     "page_layout_descr_file": "",
     "plot_directory": "",
     "reuse_designators": true,
@@ -803,7 +811,7 @@
         "uuid": "f4845b5a-c1f5-4b92-a3fd-dd76397e386f"
       }
     ],
-    "used_designators": "#FLG1-2,H1-4,#PWR9,RZ1",
+    "used_designators": "",
     "variants": []
   },
   "sheets": [

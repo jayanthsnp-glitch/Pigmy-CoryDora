@@ -1,0 +1,23 @@
+%TF.GenerationSoftware,KiCad,Pcbnew,10.0.1*%
+%TF.CreationDate,2026-05-08T20:38:29+05:30*%
+%TF.ProjectId,pigmy-corydora,7069676d-792d-4636-9f72-79646f72612e,V 1.0*%
+%TF.SameCoordinates,Original*%
+%TF.FileFunction,Profile,NP*%
+%FSLAX46Y46*%
+G04 Gerber Fmt 4.6, Leading zero omitted, Abs format (unit mm)*
+G04 Created by KiCad (PCBNEW 10.0.1) date 2026-05-08 20:38:29*
+%MOMM*%
+%LPD*%
+G01*
+G04 APERTURE LIST*
+%TA.AperFunction,Profile*%
+%ADD10C,0.200000*%
+%TD*%
+G04 APERTURE END LIST*
+D10*
+X94166324Y-34438512D02*
+X177000000Y-34438512D01*
+X177000000Y-59500000D01*
+X94166324Y-59500000D01*
+X94166324Y-34438512D01*
+M02*

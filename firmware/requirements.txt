@@ -1,0 +1,6 @@
+# CircuitPython library dependencies
+# Install these from the CircuitPython Bundle into the CIRCUITPY/lib/ folder
+# Bundle: https://circuitpython.org/libraries
+
+adafruit_hid
+neopixel
