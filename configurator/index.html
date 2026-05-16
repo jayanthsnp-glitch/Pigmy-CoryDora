@@ -7,331 +7,304 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=VT323&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.167.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.167.0/examples/jsm/"
+  }
+}
+</script>
+
 <style>
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-
 :root {
-  --bg:          #060a06;
-  --surf:        #0c110c;
-  --surf2:       #101610;
-  --surf3:       #141e14;
-  --border:      #192419;
-  --border2:     #223222;
-  --accent:      #00e676;
-  --accent2:     #69f0ae;
-  --accent-dim:  #00874a;
-  --text:        #a8c4a8;
-  --text-dim:    #5c7a5c;
-  --text-muted:  #384e38;
-  --red:         #ff5252;
-  --amber:       #ffb300;
-  --blue:        #448aff;
-  --white:       #d4ead4;
-  --glow-green:  rgba(0, 230, 118, 0.25);
-  --font-mono:   'JetBrains Mono', monospace;
-  --font-vt:     'VT323', monospace;
+  --bg:         #060a06;
+  --surf:       #0c110c;
+  --surf2:      #101610;
+  --surf3:      #141e14;
+  --border:     #192419;
+  --border2:    #223222;
+  --accent:     #00e676;
+  --accent2:    #69f0ae;
+  --accent-dim: #00874a;
+  --text:       #a8c4a8;
+  --text-dim:   #5c7a5c;
+  --text-muted: #384e38;
+  --red:        #ff5252;
+  --amber:      #ffb300;
+  --font-mono:  'JetBrains Mono', monospace;
+  --font-vt:    'VT323', monospace;
 }
+html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 13px; }
 
-html, body { height: 100%; background: var(--bg); color: var(--text); font-family: var(--font-mono); font-size: 13px; line-height: 1.6; overflow-x: hidden; }
-
-/* PCB grid + scanlines */
 body::before {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 999;
-  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.06) 2px, rgba(0,0,0,0.06) 4px);
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+  background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);
 }
 body::after {
-  content: '';
-  position: fixed; inset: 0; pointer-events: none; z-index: 0;
-  background-image:
-    linear-gradient(rgba(0,230,118,0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(0,230,118,0.025) 1px, transparent 1px);
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image: linear-gradient(rgba(0,230,118,0.02) 1px,transparent 1px), linear-gradient(90deg,rgba(0,230,118,0.02) 1px,transparent 1px);
   background-size: 40px 40px;
 }
 
-.app {
-  position: relative; z-index: 1;
-  max-width: 980px; margin: 0 auto; min-height: 100vh;
-  display: flex; flex-direction: column;
-  padding: 0 28px 28px;
-}
+.app { position: relative; z-index: 1; max-width: 1100px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; padding: 0 24px 24px; }
 
 /* ── Header ── */
-.header {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 22px 0 18px;
-  border-bottom: 1px solid var(--border);
-  margin-bottom: 36px;
-}
-.logo { display: flex; align-items: baseline; gap: 14px; }
-.logo-title {
-  font-family: var(--font-vt); font-size: 36px; letter-spacing: 3px;
-  color: var(--accent); line-height: 1;
-  text-shadow: 0 0 24px rgba(0,230,118,0.4), 0 0 60px rgba(0,230,118,0.1);
-}
+.header { display: flex; align-items: center; justify-content: space-between; padding: 18px 0 16px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+.logo { display: flex; align-items: baseline; gap: 12px; }
+.logo-title { font-family: var(--font-vt); font-size: 34px; letter-spacing: 3px; color: var(--accent); line-height: 1; text-shadow: 0 0 24px rgba(0,230,118,0.35); }
 .logo-sub { font-size: 10px; color: var(--text-muted); letter-spacing: 4px; text-transform: uppercase; }
-.header-right { display: flex; align-items: center; gap: 14px; }
-
-.status-pill {
-  display: flex; align-items: center; gap: 7px;
-  padding: 5px 14px; border: 1px solid var(--border); border-radius: 2px;
-  font-size: 10px; letter-spacing: 2px; color: var(--text-muted);
-  transition: all 0.3s;
-}
-.status-dot {
-  width: 7px; height: 7px; border-radius: 50%;
-  background: var(--text-muted); flex-shrink: 0; transition: all 0.3s;
-}
+.header-right { display: flex; align-items: center; gap: 12px; }
+.status-pill { display: flex; align-items: center; gap: 6px; padding: 4px 12px; border: 1px solid var(--border); border-radius: 2px; font-size: 10px; letter-spacing: 2px; color: var(--text-muted); transition: all .3s; }
+.status-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--text-muted); transition: all .3s; }
 .status-pill.live { border-color: var(--accent-dim); color: var(--accent2); }
-.status-pill.live .status-dot {
-  background: var(--accent);
-  box-shadow: 0 0 6px var(--accent), 0 0 12px rgba(0,230,118,0.4);
-  animation: dot-pulse 2s infinite;
-}
-@keyframes dot-pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.status-pill.live .status-dot { background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: dpulse 2s infinite; }
+@keyframes dpulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 
 /* ── Buttons ── */
-.btn {
-  font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px;
-  text-transform: uppercase; padding: 8px 16px;
-  border: 1px solid var(--border2); background: var(--surf2);
-  color: var(--text); cursor: pointer; border-radius: 2px;
-  transition: all 0.15s; user-select: none;
-}
-.btn:hover { border-color: var(--accent-dim); color: var(--accent); background: rgba(0,230,118,0.04); }
+.btn { font-family: var(--font-mono); font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; padding: 8px 14px; border: 1px solid var(--border2); background: var(--surf2); color: var(--text); cursor: pointer; border-radius: 2px; transition: all .15s; user-select: none; }
+.btn:hover { border-color: var(--accent-dim); color: var(--accent); background: rgba(0,230,118,.04); }
 .btn:active { transform: translateY(1px); }
-.btn:disabled { opacity: 0.28; pointer-events: none; }
-.btn.danger { border-color: #3a1c1c; color: var(--red); background: rgba(255,82,82,0.04); }
-.btn.danger:hover { background: rgba(255,82,82,0.1); border-color: var(--red); }
-.btn.pulsing { animation: btn-pulse 0.9s ease infinite; }
-@keyframes btn-pulse { 0%,100%{border-color:var(--accent-dim)} 50%{border-color:var(--border)} }
+.btn:disabled { opacity: .28; pointer-events: none; }
+.btn.danger { border-color: #3a1c1c; color: var(--red); }
+.btn.danger:hover { background: rgba(255,82,82,.1); border-color: var(--red); }
+.btn.pulsing { animation: bpulse .9s ease infinite; }
+@keyframes bpulse { 0%,100%{border-color:var(--accent-dim)} 50%{border-color:var(--border)} }
+.btn-cta { font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px; text-transform: uppercase; padding: 10px 26px; border: 1px solid var(--accent-dim); background: rgba(0,230,118,.07); color: var(--accent); cursor: pointer; border-radius: 2px; transition: all .2s; user-select: none; }
+.btn-cta:hover { background: rgba(0,230,118,.14); box-shadow: 0 0 18px rgba(0,230,118,.15); }
+.btn-cta:disabled { opacity: .28; pointer-events: none; }
 
-.btn-cta {
-  font-family: var(--font-mono); font-size: 12px; letter-spacing: 2px;
-  text-transform: uppercase; padding: 11px 28px;
-  border: 1px solid var(--accent-dim); background: rgba(0,230,118,0.07);
-  color: var(--accent); cursor: pointer; border-radius: 2px;
-  transition: all 0.2s; user-select: none;
-}
-.btn-cta:hover { background: rgba(0,230,118,0.14); box-shadow: 0 0 20px rgba(0,230,118,0.15); }
-.btn-cta:active { transform: translateY(1px); }
-.btn-cta:disabled { opacity: 0.28; pointer-events: none; }
+/* ── Workspace ── */
+.workspace { display: grid; grid-template-columns: 1fr 380px; gap: 14px; margin-bottom: 16px; }
 
-/* ── Section headers ── */
-.section-hdr { display: flex; align-items: center; gap: 14px; margin-bottom: 16px; }
-.section-label { font-size: 9px; letter-spacing: 4px; text-transform: uppercase; color: var(--text-muted); white-space: nowrap; }
-.section-rule { flex: 1; height: 1px; background: var(--border); }
-.btn-toggle { padding: 4px 12px; font-size: 10px; letter-spacing: 1.5px; }
+/* ── Device panel ── */
+.device-panel { background: var(--surf); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; position: relative; display: flex; flex-direction: column; }
+.device-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surf2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.device-label { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
+.canvas-wrap { position: relative; flex: 1; }
+#c3d { display: block; width: 100%; height: 320px; }
+.loading-msg { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 11px; color: var(--text-muted); letter-spacing: 2px; pointer-events: none; }
 
-/* ── Key Cards ── */
-.keys-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
-.key-card {
-  background: var(--surf); border: 1px solid var(--border);
-  border-radius: 3px; overflow: hidden;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  animation: rise 0.45s ease both;
+/* ── Key hit targets (overlaid on canvas) ── */
+.key-target {
+  position: absolute;
+  width: 54px; height: 54px;
+  margin-left: -27px; margin-top: -27px;
+  border-radius: 8px;
+  border: 2px solid rgba(255,255,255,.12);
+  cursor: pointer;
+  transition: border-color .2s, box-shadow .2s, transform .1s;
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 2px;
 }
-.key-card:nth-child(1){animation-delay:0.05s}
-.key-card:nth-child(2){animation-delay:0.1s}
-.key-card:nth-child(3){animation-delay:0.15s}
-@keyframes rise { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
-.key-card:hover { border-color: var(--border2); }
+.key-target:hover { border-color: rgba(255,255,255,.35); transform: translate(-50%,-50%) scale(1.06) !important; }
+.key-target.selected { border-color: var(--accent); box-shadow: 0 0 16px rgba(0,230,118,.4); }
+.key-target-num { font-family: var(--font-vt); font-size: 16px; color: rgba(255,255,255,.7); line-height: 1; pointer-events: none; }
+.key-target-dot { width: 6px; height: 6px; border-radius: 50%; pointer-events: none; }
 
-.key-cap {
-  position: relative;
-  background: linear-gradient(160deg, var(--surf3) 0%, var(--surf2) 100%);
-  border-bottom: 1px solid var(--border);
-  padding: 18px 18px 14px;
-  display: flex; align-items: flex-start; justify-content: space-between;
-  user-select: none;
-}
-.key-cap::after {
-  content: '';
-  position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-  background: linear-gradient(90deg, transparent, var(--border2), transparent);
-}
-.key-cap-left { display: flex; flex-direction: column; gap: 4px; }
-.key-num { font-family: var(--font-vt); font-size: 32px; color: var(--white); line-height: 1; letter-spacing: 1px; }
-.key-tag { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; }
-.led-orb {
-  width: 13px; height: 13px; border-radius: 50%;
-  border: 1px solid rgba(255,255,255,0.08);
-  transition: background 0.3s, box-shadow 0.3s;
-  flex-shrink: 0; margin-top: 3px;
-}
+/* ── Config panel ── */
+.config-panel { background: var(--surf); border: 1px solid var(--border); border-radius: 3px; display: flex; flex-direction: column; overflow: hidden; }
+.config-toolbar { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: var(--surf2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.config-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
 
-.key-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
-.field-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 5px; }
+.config-empty { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 24px; }
+.config-empty-arrow { font-family: var(--font-vt); font-size: 36px; color: var(--text-muted); animation: arrowpulse 2s ease infinite; }
+@keyframes arrowpulse { 0%,100%{opacity:.3;transform:translateX(0)} 50%{opacity:.8;transform:translateX(-6px)} }
+.config-empty-text { font-size: 11px; color: var(--text-muted); letter-spacing: 1px; text-align: center; line-height: 1.7; }
+
+.config-body { flex: 1; overflow-y: auto; padding: 16px; display: flex; flex-direction: column; gap: 16px; }
+.config-body::-webkit-scrollbar { width: 3px; }
+.config-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+.config-key-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px; }
+.config-key-name { font-family: var(--font-vt); font-size: 28px; color: white; line-height: 1; }
+.config-key-led { width: 12px; height: 12px; border-radius: 50%; }
+
+.field-lbl { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
 
 select.action-sel {
-  width: 100%; font-family: var(--font-mono); font-size: 12px;
-  color: var(--text); background: var(--surf3);
-  border: 1px solid var(--border2); border-radius: 2px;
-  padding: 7px 28px 7px 10px; cursor: pointer;
-  -webkit-appearance: none; appearance: none;
+  width: 100%; font-family: var(--font-mono); font-size: 12px; color: var(--text);
+  background: var(--surf3); border: 1px solid var(--border2); border-radius: 2px;
+  padding: 8px 28px 8px 10px; cursor: pointer; -webkit-appearance: none; appearance: none;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M1 1l4 4 4-4' stroke='%23384e38' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
-  transition: border-color 0.15s;
+  transition: border-color .15s;
 }
 select.action-sel:hover { border-color: var(--accent-dim); }
 select.action-sel:focus { outline: none; border-color: var(--accent); }
-select.action-sel option { background: #0c150c; color: var(--text); }
-select.action-sel optgroup { background: #08100a; color: var(--text-muted); font-size: 11px; }
+select.action-sel option { background: #0c150c; }
+select.action-sel optgroup { background: #08100a; color: var(--text-muted); }
 
 .color-row { display: flex; align-items: center; gap: 10px; }
-.swatch-wrap { position: relative; width: 30px; height: 30px; flex-shrink: 0; cursor: pointer; }
-.swatch-wrap input[type="color"] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; border: none; padding: 0; }
-.swatch { width: 30px; height: 30px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.08); pointer-events: none; transition: box-shadow 0.3s; }
-.swatch-wrap:hover .swatch { box-shadow: 0 0 0 1px rgba(255,255,255,0.15); }
+.swatch-wrap { position: relative; width: 32px; height: 32px; flex-shrink: 0; cursor: pointer; }
+.swatch-wrap input[type="color"] { position: absolute; inset: 0; opacity: 0; width: 100%; height: 100%; cursor: pointer; padding: 0; border: none; }
+.swatch { width: 32px; height: 32px; border-radius: 50%; border: 1px solid rgba(255,255,255,.1); pointer-events: none; transition: box-shadow .3s; }
+.swatch-wrap:hover .swatch { box-shadow: 0 0 0 1px rgba(255,255,255,.2); }
 .color-hex { font-size: 12px; color: var(--text-dim); letter-spacing: 1px; }
 
-/* ── LED Panel ── */
-.led-panel {
-  background: var(--surf); border: 1px solid var(--border); border-radius: 3px;
-  padding: 20px; margin-bottom: 28px;
-  animation: rise 0.45s 0.2s ease both;
-}
-.led-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+/* ── LED section ── */
+.led-section { border: 1px solid var(--border); border-radius: 2px; overflow: hidden; }
+.led-section-hdr { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: var(--surf3); cursor: pointer; user-select: none; }
+.led-section-hdr:hover { background: var(--surf2); }
+.led-hdr-label { font-size: 9px; letter-spacing: 2.5px; text-transform: uppercase; color: var(--text-muted); }
+.led-chevron { font-size: 10px; color: var(--text-muted); transition: transform .2s; }
+.led-chevron.open { transform: rotate(180deg); }
+.led-body { padding: 14px; display: flex; flex-direction: column; gap: 14px; }
 
-.breathe-swatches { display: flex; gap: 14px; align-items: flex-end; padding-top: 6px; }
-.breathe-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.breathe-row { display: flex; gap: 12px; }
+.breathe-item { display: flex; flex-direction: column; align-items: center; gap: 5px; }
 .breathe-lbl { font-size: 9px; color: var(--text-muted); letter-spacing: 1px; }
 
-.slider-group { display: flex; flex-direction: column; gap: 18px; }
 .slider-row { display: flex; flex-direction: column; gap: 7px; }
 .slider-hdr { display: flex; justify-content: space-between; align-items: baseline; }
 .slider-val { font-size: 12px; color: var(--accent); letter-spacing: 1px; }
+input[type="range"] { -webkit-appearance: none; width: 100%; height: 2px; background: var(--border2); border-radius: 2px; outline: none; cursor: pointer; }
+input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 6px rgba(0,230,118,.5); cursor: pointer; }
 
-input[type="range"] {
-  -webkit-appearance: none; appearance: none; width: 100%; height: 2px;
-  background: var(--border2); border-radius: 2px; outline: none; cursor: pointer;
-}
-input[type="range"]::-webkit-slider-thumb {
-  -webkit-appearance: none; width: 13px; height: 13px; border-radius: 50%;
-  background: var(--accent); cursor: pointer; transition: box-shadow 0.2s;
-  box-shadow: 0 0 6px rgba(0,230,118,0.5);
-}
-input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(0,230,118,0.8); }
-
-/* ── Action Bar ── */
-.action-bar {
-  display: flex; justify-content: space-between; align-items: center;
-  margin-bottom: 28px;
-  animation: rise 0.45s 0.25s ease both;
-}
+/* ── Action bar ── */
+.action-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 
 /* ── Terminal ── */
-.terminal {
-  background: var(--surf); border: 1px solid var(--border); border-radius: 3px;
-  overflow: hidden; display: flex; flex-direction: column;
-  min-height: 130px; max-height: 190px;
-  animation: rise 0.45s 0.3s ease both;
-}
-.term-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 7px 12px; background: var(--surf2); border-bottom: 1px solid var(--border);
-  flex-shrink: 0;
-}
-.term-title { font-size: 9px; letter-spacing: 3px; color: var(--text-muted); text-transform: uppercase; }
-.term-lights { display: flex; gap: 5px; }
+.terminal { background: var(--surf); border: 1px solid var(--border); border-radius: 3px; overflow: hidden; display: flex; flex-direction: column; min-height: 110px; max-height: 160px; }
+.term-bar { display: flex; align-items: center; justify-content: space-between; padding: 6px 12px; background: var(--surf2); border-bottom: 1px solid var(--border); flex-shrink: 0; }
+.term-title { font-size: 9px; letter-spacing: 3px; text-transform: uppercase; color: var(--text-muted); }
+.term-lights { display: flex; gap: 4px; }
 .term-light { width: 8px; height: 8px; border-radius: 50%; }
-.term-body { flex: 1; overflow-y: auto; padding: 8px 12px; display: flex; flex-direction: column; gap: 1px; }
+.term-body { flex: 1; overflow-y: auto; padding: 7px 12px; display: flex; flex-direction: column; gap: 1px; }
 .term-body::-webkit-scrollbar { width: 3px; }
 .term-body::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
-
-.log-entry { display: flex; gap: 10px; font-size: 11px; font-family: var(--font-mono); }
+.log-entry { display: flex; gap: 10px; font-size: 11px; }
 .log-t { color: var(--text-muted); flex-shrink: 0; }
-.log-m { }
-.log-entry.ok    .log-m { color: var(--accent2); }
-.log-entry.info  .log-m { color: var(--text-dim); }
-.log-entry.warn  .log-m { color: var(--amber); }
+.log-entry.ok   .log-m { color: var(--accent2); }
+.log-entry.info .log-m { color: var(--text-dim); }
+.log-entry.warn .log-m { color: var(--amber); }
 .log-entry.error .log-m { color: var(--red); }
 
 /* ── No-serial overlay ── */
-.no-serial {
-  display: none; position: fixed; inset: 0; z-index: 200;
-  background: rgba(6,10,6,0.95); align-items: center; justify-content: center;
-  backdrop-filter: blur(4px);
-}
-.no-serial-box {
-  background: var(--surf); border: 1px solid var(--border); border-radius: 4px;
-  padding: 36px; max-width: 440px; text-align: center;
-}
-.no-serial-title { font-family: var(--font-vt); font-size: 28px; color: var(--amber); margin-bottom: 14px; }
+.no-serial { display: none; position: fixed; inset: 0; z-index: 200; background: rgba(6,10,6,.95); align-items: center; justify-content: center; }
+.no-serial-box { background: var(--surf); border: 1px solid var(--border); border-radius: 4px; padding: 36px; max-width: 420px; text-align: center; }
+.no-serial-title { font-family: var(--font-vt); font-size: 28px; color: var(--amber); margin-bottom: 12px; }
 .no-serial-body { font-size: 12px; color: var(--text-dim); line-height: 1.8; }
 .no-serial-body a { color: var(--accent); }
 </style>
 </head>
 <body>
-
 <div class="app">
 
-  <!-- ── Header ── -->
   <header class="header">
     <div class="logo">
       <span class="logo-title">PIGMY CORYDORA</span>
-      <span class="logo-sub">Programmer v1.0</span>
+      <span class="logo-sub">Programmer v2.0</span>
     </div>
     <div class="header-right">
       <div class="status-pill" id="statusPill">
         <div class="status-dot"></div>
         <span id="statusTxt">DISCONNECTED</span>
       </div>
-      <button class="btn" id="connectBtn" onclick="toggleConnect()">CONNECT</button>
+      <button class="btn" id="connectBtn">CONNECT</button>
     </div>
   </header>
 
-  <!-- ── Keys ── -->
-  <div>
-    <div class="section-hdr">
-      <span class="section-label">Key Mapping</span>
-      <div class="section-rule"></div>
-    </div>
-    <div class="keys-grid" id="keysGrid"></div>
-  </div>
+  <div class="workspace">
 
-  <!-- ── LED Panel ── -->
-  <div>
-    <div class="section-hdr">
-      <span class="section-label">LED Animation</span>
-      <div class="section-rule"></div>
-      <button class="btn btn-toggle" id="ledToggle" onclick="toggleLED()">SHOW</button>
-    </div>
-    <div class="led-panel" id="ledPanel" style="display:none">
-      <div class="led-grid">
-        <div>
-          <div class="field-lbl">Breathing Color Cycle</div>
-          <div class="breathe-swatches" id="breatheSwatches"></div>
+    <!-- ── 3D Device View ── -->
+    <div class="device-panel">
+      <div class="device-toolbar">
+        <span class="device-label">Pigmy Corydora — Top View</span>
+        <span class="device-label" id="modelStatus">Loading model…</span>
+      </div>
+      <div class="canvas-wrap" id="canvasWrap">
+        <canvas id="c3d"></canvas>
+        <div class="loading-msg" id="loadingMsg">LOADING MODEL…</div>
+        <!-- Key hit targets — positions set dynamically after Three.js load -->
+        <div class="key-target" id="kt0" data-key="0" style="display:none">
+          <span class="key-target-num">01</span>
+          <div class="key-target-dot" id="kd0"></div>
         </div>
-        <div class="slider-group">
-          <div class="slider-row">
-            <div class="slider-hdr">
-              <span class="field-lbl">Breathe Period</span>
-              <span class="slider-val" id="periodVal">2.0s</span>
-            </div>
-            <input type="range" id="periodSlider" min="0.5" max="8" step="0.1" value="2.0"
-              oninput="onPeriod(this)">
-          </div>
-          <div class="slider-row">
-            <div class="slider-hdr">
-              <span class="field-lbl">LED Brightness</span>
-              <span class="slider-val" id="brightVal">25%</span>
-            </div>
-            <input type="range" id="brightSlider" min="0" max="100" step="1" value="25"
-              oninput="onBrightness(this)">
-          </div>
+        <div class="key-target" id="kt1" data-key="1" style="display:none">
+          <span class="key-target-num">02</span>
+          <div class="key-target-dot" id="kd1"></div>
+        </div>
+        <div class="key-target" id="kt2" data-key="2" style="display:none">
+          <span class="key-target-num">03</span>
+          <div class="key-target-dot" id="kd2"></div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- ── Action Bar ── -->
+    <!-- ── Config Panel ── -->
+    <div class="config-panel" id="configPanel">
+      <div class="config-toolbar">
+        <span class="config-title" id="configTitle">Configuration</span>
+      </div>
+      <div class="config-empty" id="configEmpty">
+        <span class="config-empty-arrow">←</span>
+        <p class="config-empty-text">Click a keycap on the<br>device to configure it</p>
+      </div>
+      <div class="config-body" id="configBody" style="display:none">
+        <div class="config-key-header">
+          <span class="config-key-name" id="cfgKeyName">SW 01</span>
+          <div class="config-key-led" id="cfgKeyLed"></div>
+        </div>
+
+        <div>
+          <div class="field-lbl">Action</div>
+          <select class="action-sel" id="cfgAction"></select>
+        </div>
+
+        <div>
+          <div class="field-lbl">Key Color</div>
+          <div class="color-row">
+            <div class="swatch-wrap">
+              <div class="swatch" id="cfgSwatch"></div>
+              <input type="color" id="cfgColor">
+            </div>
+            <span class="color-hex" id="cfgHex">#ff2828</span>
+          </div>
+        </div>
+
+        <!-- LED Animation (collapsible) -->
+        <div class="led-section">
+          <div class="led-section-hdr" id="ledToggleBtn">
+            <span class="led-hdr-label">LED Animation</span>
+            <span class="led-chevron" id="ledChevron">▼</span>
+          </div>
+          <div id="ledBody" style="display:none">
+            <div class="led-body">
+              <div>
+                <div class="field-lbl">Breathing Colors</div>
+                <div class="breathe-row" id="breatheRow"></div>
+              </div>
+              <div class="slider-row">
+                <div class="slider-hdr">
+                  <span class="field-lbl">Period</span>
+                  <span class="slider-val" id="periodVal">2.0s</span>
+                </div>
+                <input type="range" id="periodSlider" min="0.5" max="8" step="0.1" value="2.0">
+              </div>
+              <div class="slider-row">
+                <div class="slider-hdr">
+                  <span class="field-lbl">Brightness</span>
+                  <span class="slider-val" id="brightVal">25%</span>
+                </div>
+                <input type="range" id="brightSlider" min="0" max="100" step="1" value="25">
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /config-body -->
+    </div><!-- /config-panel -->
+
+  </div><!-- /workspace -->
+
   <div class="action-bar">
-    <button class="btn" id="readBtn" onclick="readDevice()" disabled>READ FROM DEVICE</button>
-    <button class="btn-cta" id="saveBtn" onclick="saveDevice()" disabled>SAVE TO DEVICE</button>
+    <button class="btn" id="readBtn" disabled>READ FROM DEVICE</button>
+    <button class="btn-cta" id="saveBtn" disabled>SAVE TO DEVICE</button>
   </div>
 
-  <!-- ── Terminal ── -->
   <div class="terminal">
     <div class="term-bar">
       <span class="term-title">Serial Log</span>
@@ -344,87 +317,102 @@ input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(0,23
     <div class="term-body" id="termBody"></div>
   </div>
 
-</div>
+</div><!-- /app -->
 
-<!-- ── No Web Serial overlay ── -->
 <div class="no-serial" id="noSerial">
   <div class="no-serial-box">
     <div class="no-serial-title">BROWSER NOT SUPPORTED</div>
-    <p class="no-serial-body">
-      The Web Serial API requires <strong>Chrome 89+</strong> or <strong>Edge 89+</strong>.<br><br>
-      Open this file in
-      <a href="https://www.google.com/chrome/" target="_blank">Google Chrome</a>
-      and make sure you are not using an incognito window.
-    </p>
+    <p class="no-serial-body">Web Serial API requires Chrome 89+ or Edge 89+.<br><br>Open in <a href="https://www.google.com/chrome/" target="_blank">Chrome</a> and ensure you're not in incognito.</p>
   </div>
 </div>
 
-<script>
+<script type="module">
+import * as THREE from 'three';
+import { STLLoader } from 'three/addons/loaders/STLLoader.js';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PCB data (from KiCad schematic / PCB file)
+// ─────────────────────────────────────────────────────────────────────────────
+// STL bounding box (measured): X: ±44mm, Y: ±15mm, Z: -7→+22mm (board in XY, Z=height)
+// Board center in PCB coords: (135.583, 46.970)
+// Switch world positions (centered): SW1=-28.58, SW2=-9.16, SW3=+10.50 on X axis, Y≈0
+
+// Z = 14.4 = keycap-top height after geometry.center()
+// (original STL Z max 21.838, center 7.419 → 21.838 − 7.419 ≈ 14.4)
+const SWITCH_WORLD = [
+  new THREE.Vector3(-28.583, 0.03, 14.4),   // SW1
+  new THREE.Vector3(-9.163,  0.03, 14.4),   // SW2
+  new THREE.Vector3( 10.497, 0.03, 14.4),   // SW3
+];
+
+// X-axis midpoints used for raycasting key detection
+const KEY_X_SPLITS = [-18.873, 0.667]; // SW1|SW2 and SW2|SW3
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Action catalogue
-// Format: "type:CODE:MOD1,MOD2"
 // ─────────────────────────────────────────────────────────────────────────────
 const ACTIONS = [
   { group: 'Media', items: [
-    { label: 'Mute',              val: 'cc:MUTE:' },
-    { label: 'Volume Up',         val: 'cc:VOLUME_INCREMENT:' },
-    { label: 'Volume Down',       val: 'cc:VOLUME_DECREMENT:' },
-    { label: 'Play / Pause',      val: 'cc:PLAY_PAUSE:' },
-    { label: 'Next Track',        val: 'cc:SCAN_NEXT_TRACK:' },
-    { label: 'Prev Track',        val: 'cc:SCAN_PREVIOUS_TRACK:' },
-    { label: 'Fast Forward',      val: 'cc:FAST_FORWARD:' },
-    { label: 'Rewind',            val: 'cc:REWIND:' },
-    { label: 'Eject',             val: 'cc:EJECT:' },
+    { label:'Mute',             val:'cc:MUTE:' },
+    { label:'Volume Up',        val:'cc:VOLUME_INCREMENT:' },
+    { label:'Volume Down',      val:'cc:VOLUME_DECREMENT:' },
+    { label:'Play / Pause',     val:'cc:PLAY_PAUSE:' },
+    { label:'Next Track',       val:'cc:SCAN_NEXT_TRACK:' },
+    { label:'Prev Track',       val:'cc:SCAN_PREVIOUS_TRACK:' },
+    { label:'Fast Forward',     val:'cc:FAST_FORWARD:' },
+    { label:'Rewind',           val:'cc:REWIND:' },
+    { label:'Eject',            val:'cc:EJECT:' },
   ]},
-  { group: 'Display', items: [
-    { label: 'Brightness Up',     val: 'cc:BRIGHTNESS_INCREMENT:' },
-    { label: 'Brightness Down',   val: 'cc:BRIGHTNESS_DECREMENT:' },
+  { group:'Display', items:[
+    { label:'Brightness Up',    val:'cc:BRIGHTNESS_INCREMENT:' },
+    { label:'Brightness Down',  val:'cc:BRIGHTNESS_DECREMENT:' },
   ]},
-  { group: 'Shortcuts', items: [
-    { label: 'Copy',              val: 'key:C:LEFT_CONTROL' },
-    { label: 'Paste',             val: 'key:V:LEFT_CONTROL' },
-    { label: 'Cut',               val: 'key:X:LEFT_CONTROL' },
-    { label: 'Undo',              val: 'key:Z:LEFT_CONTROL' },
-    { label: 'Redo',              val: 'key:Z:LEFT_CONTROL,LEFT_SHIFT' },
-    { label: 'Save',              val: 'key:S:LEFT_CONTROL' },
-    { label: 'Select All',        val: 'key:A:LEFT_CONTROL' },
-    { label: 'Find',              val: 'key:F:LEFT_CONTROL' },
-    { label: 'New Tab',           val: 'key:T:LEFT_CONTROL' },
-    { label: 'Close Tab',         val: 'key:W:LEFT_CONTROL' },
-    { label: 'Screenshot',        val: 'key:PRINT_SCREEN:' },
+  { group:'Shortcuts', items:[
+    { label:'Copy',             val:'key:C:LEFT_CONTROL' },
+    { label:'Paste',            val:'key:V:LEFT_CONTROL' },
+    { label:'Cut',              val:'key:X:LEFT_CONTROL' },
+    { label:'Undo',             val:'key:Z:LEFT_CONTROL' },
+    { label:'Redo',             val:'key:Z:LEFT_CONTROL,LEFT_SHIFT' },
+    { label:'Save',             val:'key:S:LEFT_CONTROL' },
+    { label:'Select All',       val:'key:A:LEFT_CONTROL' },
+    { label:'Find',             val:'key:F:LEFT_CONTROL' },
+    { label:'New Tab',          val:'key:T:LEFT_CONTROL' },
+    { label:'Close Tab',        val:'key:W:LEFT_CONTROL' },
+    { label:'Screenshot',       val:'key:PRINT_SCREEN:' },
   ]},
-  { group: 'Keys A–Z', items: [...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(k => ({
-    label: k, val: `key:${k}:`
-  }))},
-  { group: 'Function Keys', items: Array.from({length:12},(_,i) => ({
-    label: `F${i+1}`, val: `key:F${i+1}:`
-  }))},
-  { group: 'Special', items: [
-    { label: 'Space',             val: 'key:SPACE:' },
-    { label: 'Enter',             val: 'key:ENTER:' },
-    { label: 'Tab',               val: 'key:TAB:' },
-    { label: 'Escape',            val: 'key:ESCAPE:' },
-    { label: 'Backspace',         val: 'key:BACKSPACE:' },
-    { label: 'Delete',            val: 'key:DELETE:' },
-    { label: 'Up Arrow',          val: 'key:UP_ARROW:' },
-    { label: 'Down Arrow',        val: 'key:DOWN_ARROW:' },
-    { label: 'Left Arrow',        val: 'key:LEFT_ARROW:' },
-    { label: 'Right Arrow',       val: 'key:RIGHT_ARROW:' },
-    { label: 'Home',              val: 'key:HOME:' },
-    { label: 'End',               val: 'key:END:' },
-    { label: 'Page Up',           val: 'key:PAGE_UP:' },
-    { label: 'Page Down',         val: 'key:PAGE_DOWN:' },
+  { group:'Keys A–Z', items:[...'ABCDEFGHIJKLMNOPQRSTUVWXYZ'].map(k=>({label:k,val:`key:${k}:`}))},
+  { group:'Function Keys', items:Array.from({length:12},(_,i)=>({label:`F${i+1}`,val:`key:F${i+1}:`}))},
+  { group:'Special', items:[
+    { label:'Space',            val:'key:SPACE:' },
+    { label:'Enter',            val:'key:ENTER:' },
+    { label:'Tab',              val:'key:TAB:' },
+    { label:'Escape',           val:'key:ESCAPE:' },
+    { label:'Backspace',        val:'key:BACKSPACE:' },
+    { label:'Delete',           val:'key:DELETE:' },
+    { label:'Up Arrow',         val:'key:UP_ARROW:' },
+    { label:'Down Arrow',       val:'key:DOWN_ARROW:' },
+    { label:'Left Arrow',       val:'key:LEFT_ARROW:' },
+    { label:'Right Arrow',      val:'key:RIGHT_ARROW:' },
+    { label:'Home',             val:'key:HOME:' },
+    { label:'End',              val:'key:END:' },
+    { label:'Page Up',          val:'key:PAGE_UP:' },
+    { label:'Page Down',        val:'key:PAGE_DOWN:' },
   ]},
 ];
+
+const SEL_HTML = ACTIONS.map(g =>
+  `<optgroup label="${g.group}">${g.items.map(i=>`<option value="${i.val}">${i.label}</option>`).join('')}</optgroup>`
+).join('');
 
 // ─────────────────────────────────────────────────────────────────────────────
 // State
 // ─────────────────────────────────────────────────────────────────────────────
 const DEFAULTS = {
-  keys: [
-    { type:'cc', code:'MUTE',             modifiers:[] },
-    { type:'cc', code:'VOLUME_DECREMENT', modifiers:[] },
-    { type:'cc', code:'VOLUME_INCREMENT', modifiers:[] },
+  keys:[
+    {type:'cc', code:'MUTE',             modifiers:[]},
+    {type:'cc', code:'VOLUME_DECREMENT', modifiers:[]},
+    {type:'cc', code:'VOLUME_INCREMENT', modifiers:[]},
   ],
   key_colors:     [[255,40,40],[40,100,255],[40,220,80]],
   breathe_colors: [[180,40,40],[40,180,40],[40,40,180]],
@@ -432,386 +420,477 @@ const DEFAULTS = {
   brightness:     0.25,
 };
 
-let cfg       = deepCopy(DEFAULTS);
-let port      = null;
-let sw        = null;  // serial writer
-let activeRdr = null;
-let rxBuf     = new Uint8Array(0);
-let rxReading = false;
+let cfg      = deepCopy(DEFAULTS);
+let port     = null;
+let sw       = null;
+let activeRdr= null;
+let rxBuf    = new Uint8Array(0);
+let rxReading= false;
+let selectedKey = null;
 
-function deepCopy(o) { return JSON.parse(JSON.stringify(o)); }
+function deepCopy(o){ return JSON.parse(JSON.stringify(o)); }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Colour helpers
 // ─────────────────────────────────────────────────────────────────────────────
-function toHex([r,g,b]) {
-  return '#' + [r,g,b].map(v => v.toString(16).padStart(2,'0')).join('');
-}
-function fromHex(h) {
-  const n = parseInt(h.slice(1),16);
-  return [(n>>16)&255,(n>>8)&255,n&255];
-}
-function glowStyle(hex, size=10) {
-  return `background:${hex}; box-shadow:0 0 ${size}px ${hex}`;
-}
+function toHex([r,g,b]){ return '#'+[r,g,b].map(v=>v.toString(16).padStart(2,'0')).join(''); }
+function fromHex(h){ const n=parseInt(h.slice(1),16); return [(n>>16)&255,(n>>8)&255,n&255]; }
+function glowCSS(hex,r=8){ return `background:${hex};box-shadow:0 0 ${r}px ${hex}`; }
+
+function parseVal(v){ const[type,code,m]=v.split(':'); return{type,code,modifiers:m?m.split(',').filter(Boolean):[]}; }
+function toVal({type,code,modifiers}){ return `${type}:${code}:${(modifiers||[]).join(',')}`; }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Action value helpers
+// Three.js scene
 // ─────────────────────────────────────────────────────────────────────────────
-function parseVal(val) {
-  const [type, code, modStr] = val.split(':');
-  return { type, code, modifiers: modStr ? modStr.split(',').filter(Boolean) : [] };
-}
-function toVal({ type, code, modifiers }) {
-  return `${type}:${code}:${(modifiers||[]).join(',')}`;
-}
-function buildSelectHTML() {
-  return ACTIONS.map(g =>
-    `<optgroup label="${g.group}">${g.items.map(i =>
-      `<option value="${i.val}">${i.label}</option>`
-    ).join('')}</optgroup>`
-  ).join('');
-}
-const SEL_HTML = buildSelectHTML();
+let scene, camera, renderer, controls, modelMesh;
+const raycaster = new THREE.Raycaster();
+const mouse     = new THREE.Vector2();
+let   dragMoved = false;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Render
-// ─────────────────────────────────────────────────────────────────────────────
-function renderKeys() {
-  const grid = document.getElementById('keysGrid');
-  grid.innerHTML = cfg.keys.map((key, i) => {
-    const hex = toHex(cfg.key_colors[i]);
-    return `
-      <div class="key-card">
-        <div class="key-cap">
-          <div class="key-cap-left">
-            <span class="key-num">SW ${String(i+1).padStart(2,'0')}</span>
-            <span class="key-tag">Key ${i+1}</span>
-          </div>
-          <div class="led-orb" id="orb${i}" style="${glowStyle(hex,8)}"></div>
-        </div>
-        <div class="key-body">
-          <div>
-            <div class="field-lbl">Action</div>
-            <select class="action-sel" id="sel${i}" onchange="onAction(${i},this.value)">
-              ${SEL_HTML}
-            </select>
-          </div>
-          <div>
-            <div class="field-lbl">Key Color</div>
-            <div class="color-row">
-              <div class="swatch-wrap">
-                <div class="swatch" id="sw${i}" style="${glowStyle(hex,7)}"></div>
-                <input type="color" value="${hex}" oninput="onKeyColor(${i},this.value)">
-              </div>
-              <span class="color-hex" id="hex${i}">${hex.toUpperCase()}</span>
-            </div>
-          </div>
-        </div>
-      </div>`;
-  }).join('');
+function initThree(){
+  const canvas = document.getElementById('c3d');
+  const wrap   = document.getElementById('canvasWrap');
+  const W = wrap.clientWidth;
+  const H = 320;
+  canvas.height = H; canvas.width = W;
 
-  // Restore select values after DOM is built
-  cfg.keys.forEach((key, i) => {
-    const el = document.getElementById(`sel${i}`);
-    if (el) {
-      el.value = toVal(key);
-      if (!el.value) el.value = 'cc:MUTE:';
+  renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+  renderer.setSize(W, H);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+  renderer.setClearColor(0x0c110c, 1);
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+  scene = new THREE.Scene();
+  scene.fog = new THREE.Fog(0x0c110c, 350, 600);
+
+  // ── Perspective camera — top-right view ───────────────────────────────────
+  camera = new THREE.PerspectiveCamera(38, W / H, 1, 2000);
+  camera.position.set(105, -100, 90);
+  camera.up.set(0, 0, 1);   // Z is up (KiCad convention)
+  camera.lookAt(0, 0, 3);
+
+  // ── Lighting ──────────────────────────────────────────────────────────────
+  scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+
+  const sun = new THREE.DirectionalLight(0xffffff, 1.1);
+  sun.position.set(80, -60, 120);
+  sun.castShadow = true;
+  sun.shadow.mapSize.set(1024, 1024);
+  scene.add(sun);
+
+  const fill = new THREE.DirectionalLight(0x88ffbb, 0.35);
+  fill.position.set(-60, 40, 60);
+  scene.add(fill);
+
+  const rim = new THREE.DirectionalLight(0x004422, 0.5);
+  rim.position.set(-100, 80, -20);
+  scene.add(rim);
+
+  // ── OrbitControls — full rotation + zoom ──────────────────────────────────
+  controls = new OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 0, 3);
+  controls.enableDamping  = true;
+  controls.dampingFactor  = 0.08;
+  controls.minDistance    = 60;
+  controls.maxDistance    = 400;
+  controls.maxPolarAngle  = Math.PI / 2.1;  // don't let camera go below board
+  controls.addEventListener('change', placeTargets);
+
+  // ── Drag-vs-click detection ────────────────────────────────────────────────
+  canvas.addEventListener('mousedown', () => { dragMoved = false; });
+  canvas.addEventListener('mousemove', () => { dragMoved = true; });
+  canvas.addEventListener('click', e => {
+    if (dragMoved) return;
+    const rect = canvas.getBoundingClientRect();
+    mouse.set(
+      ((e.clientX - rect.left) / rect.width)  *  2 - 1,
+      ((e.clientY - rect.top)  / rect.height) * -2 + 1
+    );
+    raycaster.setFromCamera(mouse, camera);
+    if (!modelMesh) return;
+    const hits = raycaster.intersectObject(modelMesh);
+    if (!hits.length) return;
+    const x = hits[0].point.x;
+    if      (x < KEY_X_SPLITS[0]) selectKey(0);
+    else if (x < KEY_X_SPLITS[1]) selectKey(1);
+    else                           selectKey(2);
+  });
+
+  // ── Load STL ──────────────────────────────────────────────────────────────
+  new STLLoader().load('./PigmyCoryDora.stl',
+    geo => {
+      geo.center();
+      geo.computeVertexNormals();
+      const mat = new THREE.MeshPhongMaterial({
+        color:     0x1c3a1c,
+        specular:  0x2a5a2a,
+        shininess: 35,
+        side: THREE.DoubleSide,
+      });
+      modelMesh = new THREE.Mesh(geo, mat);
+      modelMesh.receiveShadow = true;
+      modelMesh.castShadow    = true;
+      scene.add(modelMesh);
+      document.getElementById('loadingMsg').style.display = 'none';
+      document.getElementById('modelStatus').textContent = 'PigmyCoryDora.stl';
+      placeTargets();
+      showTargets();
+    },
+    xhr => {
+      const pct = Math.round(xhr.loaded / xhr.total * 100);
+      document.getElementById('loadingMsg').textContent = `LOADING… ${pct}%`;
+    },
+    () => {
+      document.getElementById('loadingMsg').textContent = 'MODEL NOT FOUND';
+      document.getElementById('modelStatus').textContent = 'no model';
+      placeTargets();
+      showTargets();
     }
+  );
+
+  // ── Render loop ────────────────────────────────────────────────────────────
+  (function loop(){
+    requestAnimationFrame(loop);
+    controls.update();
+    renderer.render(scene, camera);
+  })();
+
+  // ── Resize ────────────────────────────────────────────────────────────────
+  window.addEventListener('resize', () => {
+    const W2 = wrap.clientWidth;
+    renderer.setSize(W2, H);
+    camera.aspect = W2 / H;
+    camera.updateProjectionMatrix();
+    placeTargets();
   });
 }
 
-function renderBreathe() {
-  const row = document.getElementById('breatheSwatches');
-  row.innerHTML = cfg.breathe_colors.map((c, i) => {
+// Project switch world positions → canvas pixel positions
+function placeTargets(){
+  const canvas = document.getElementById('c3d');
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  SWITCH_WORLD.forEach((wp, i) => {
+    const v = wp.clone().project(camera);
+    const sx = (v.x + 1) / 2 * W;
+    const sy = (-v.y + 1) / 2 * H;
+    const el = document.getElementById(`kt${i}`);
+    el.style.left = sx + 'px';
+    el.style.top  = sy + 'px';
+    el.style.transform = 'translate(-50%, -50%)';
+    // Update dot color
+    document.getElementById(`kd${i}`).style.cssText = glowCSS(toHex(cfg.key_colors[i]), 5);
+  });
+}
+
+function showTargets(){
+  [0,1,2].forEach(i => document.getElementById(`kt${i}`).style.display = 'flex');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Key selection
+// ─────────────────────────────────────────────────────────────────────────────
+function selectKey(i) {
+  selectedKey = i;
+  [0,1,2].forEach(n => {
+    document.getElementById(`kt${n}`).classList.toggle('selected', n === i);
+  });
+  renderConfigPanel();
+}
+
+function renderConfigPanel() {
+  if (selectedKey === null) {
+    document.getElementById('configEmpty').style.display = 'flex';
+    document.getElementById('configBody').style.display = 'none';
+    document.getElementById('configTitle').textContent = 'Configuration';
+    return;
+  }
+  const i = selectedKey;
+  document.getElementById('configEmpty').style.display = 'none';
+  document.getElementById('configBody').style.display = 'flex';
+  document.getElementById('configTitle').textContent = `KEY ${i+1} OF 3`;
+
+  const hex = toHex(cfg.key_colors[i]);
+  document.getElementById('cfgKeyName').textContent = `SW 0${i+1}`;
+  document.getElementById('cfgKeyLed').style.cssText = glowCSS(hex, 10);
+  document.getElementById('cfgSwatch').style.cssText = glowCSS(hex, 7);
+  document.getElementById('cfgColor').value = hex;
+  document.getElementById('cfgHex').textContent = hex.toUpperCase();
+
+  const sel = document.getElementById('cfgAction');
+  sel.innerHTML = SEL_HTML;
+  sel.value = toVal(cfg.keys[i]);
+  if (!sel.value) sel.value = 'cc:MUTE:';
+}
+
+function renderBreathe(){
+  const row = document.getElementById('breatheRow');
+  row.innerHTML = cfg.breathe_colors.map((c,i) => {
     const hex = toHex(c);
-    return `
-      <div class="breathe-item">
-        <div class="swatch-wrap">
-          <div class="swatch" id="bs${i}" style="${glowStyle(hex,7)}"></div>
-          <input type="color" value="${hex}" oninput="onBreathe(${i},this.value)">
-        </div>
-        <span class="breathe-lbl">C${i+1}</span>
-      </div>`;
+    return `<div class="breathe-item">
+      <div class="swatch-wrap" style="width:28px;height:28px">
+        <div class="swatch" id="bs${i}" style="width:28px;height:28px;${glowCSS(hex,6)}"></div>
+        <input type="color" value="${hex}" data-idx="${i}" class="breathe-inp">
+      </div>
+      <span class="breathe-lbl">C${i+1}</span>
+    </div>`;
   }).join('');
+  row.querySelectorAll('.breathe-inp').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.idx;
+      cfg.breathe_colors[idx] = fromHex(e.target.value);
+      document.getElementById(`bs${idx}`).style.cssText = `width:28px;height:28px;${glowCSS(e.target.value,6)}`;
+    });
+  });
 }
 
-function renderSliders() {
-  const ps = document.getElementById('periodSlider');
-  const pv = document.getElementById('periodVal');
-  ps.value = cfg.breathe_period;
-  pv.textContent = cfg.breathe_period.toFixed(1) + 's';
-
-  const bs = document.getElementById('brightSlider');
-  const bv = document.getElementById('brightVal');
-  bs.value = Math.round(cfg.brightness * 100);
-  bv.textContent = Math.round(cfg.brightness * 100) + '%';
-}
-
-function renderAll() { renderKeys(); renderBreathe(); renderSliders(); }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Event handlers
-// ─────────────────────────────────────────────────────────────────────────────
-function toggleLED() {
-  const panel = document.getElementById('ledPanel');
-  const btn   = document.getElementById('ledToggle');
-  const open  = panel.style.display === 'none';
-  panel.style.display = open ? '' : 'none';
-  btn.textContent = open ? 'HIDE' : 'SHOW';
-}
-
-function onAction(i, val)      { cfg.keys[i] = parseVal(val); }
-function onPeriod(el)          { cfg.breathe_period = parseFloat(el.value); document.getElementById('periodVal').textContent = cfg.breathe_period.toFixed(1)+'s'; }
-function onBrightness(el)      { cfg.brightness = parseInt(el.value)/100; document.getElementById('brightVal').textContent = el.value+'%'; }
-
-function onKeyColor(i, hex) {
-  cfg.key_colors[i] = fromHex(hex);
-  document.getElementById(`sw${i}`).style.cssText  = glowStyle(hex,7);
-  document.getElementById(`hex${i}`).textContent   = hex.toUpperCase();
-  document.getElementById(`orb${i}`).style.cssText = glowStyle(hex,8);
-}
-
-function onBreathe(i, hex) {
-  cfg.breathe_colors[i] = fromHex(hex);
-  document.getElementById(`bs${i}`).style.cssText = glowStyle(hex,7);
+function renderSliders(){
+  document.getElementById('periodSlider').value = cfg.breathe_period;
+  document.getElementById('periodVal').textContent = cfg.breathe_period.toFixed(1)+'s';
+  document.getElementById('brightSlider').value = Math.round(cfg.brightness*100);
+  document.getElementById('brightVal').textContent = Math.round(cfg.brightness*100)+'%';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Serial — connection
+// Serial
 // ─────────────────────────────────────────────────────────────────────────────
-async function toggleConnect() {
-  port ? await doDisconnect() : await doConnect();
+async function serialConnect(){
+  port = await navigator.serial.requestPort();
+  await port.open({ baudRate:115200 });
+  sw = port.writable.getWriter();
+  rxBuf = new Uint8Array(0); rxReading = true;
+  startReadLoop();
 }
 
-async function doConnect() {
-  const btn = document.getElementById('connectBtn');
-  btn.textContent = 'CONNECTING…'; btn.classList.add('pulsing'); btn.disabled = true;
-  try {
-    port = await navigator.serial.requestPort();
-    await port.open({ baudRate: 115200 });
-    sw = port.writable.getWriter();
-    rxBuf = new Uint8Array(0);
-    rxReading = true;
-    startReadLoop();
-    setConnected(true);
-    tlog('Device connected', 'ok');
-    tlog('Click "Read from Device" to load current config', 'info');
-  } catch(e) {
-    tlog('Connection failed: ' + e.message, 'error');
-    btn.classList.remove('pulsing'); btn.textContent = 'CONNECT'; btn.disabled = false;
-    port = null;
-  }
-}
-
-async function doDisconnect() {
+async function serialDisconnect(){
   rxReading = false;
-  if (activeRdr) { try { await activeRdr.cancel(); } catch(_){} activeRdr = null; }
-  if (sw)        { try { sw.releaseLock(); } catch(_){} sw = null; }
-  if (port)      { try { await port.close(); } catch(_){} port = null; }
-  setConnected(false);
-  tlog('Disconnected', 'warn');
+  if(activeRdr){ try{ await activeRdr.cancel(); }catch(_){} activeRdr=null; }
+  if(sw){ try{ sw.releaseLock(); }catch(_){} sw=null; }
+  if(port){ try{ await port.close(); }catch(_){} port=null; }
 }
 
-function setConnected(on) {
-  const btn   = document.getElementById('connectBtn');
-  const pill  = document.getElementById('statusPill');
-  const stxt  = document.getElementById('statusTxt');
-  const readB = document.getElementById('readBtn');
-  const saveB = document.getElementById('saveBtn');
-  btn.classList.remove('pulsing'); btn.disabled = false;
-  if (on) {
-    btn.textContent = 'DISCONNECT'; btn.classList.add('danger');
-    pill.classList.add('live'); stxt.textContent = 'CONNECTED';
-    readB.disabled = false; saveB.disabled = false;
-  } else {
-    btn.textContent = 'CONNECT'; btn.classList.remove('danger');
-    pill.classList.remove('live'); stxt.textContent = 'DISCONNECTED';
-    readB.disabled = true; saveB.disabled = true;
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Serial — low-level read loop
-// ─────────────────────────────────────────────────────────────────────────────
-function startReadLoop() {
-  (async () => {
+function startReadLoop(){
+  (async()=>{
     activeRdr = port.readable.getReader();
-    try {
-      while (rxReading) {
-        const { value, done } = await activeRdr.read();
-        if (done) break;
-        const next = new Uint8Array(rxBuf.length + value.length);
-        next.set(rxBuf); next.set(value, rxBuf.length);
-        rxBuf = next;
+    try{
+      while(rxReading){
+        const{value,done}=await activeRdr.read();
+        if(done) break;
+        const next=new Uint8Array(rxBuf.length+value.length);
+        next.set(rxBuf); next.set(value,rxBuf.length); rxBuf=next;
       }
-    } catch(_) {}
-    finally { try { activeRdr.releaseLock(); } catch(_){} activeRdr = null; }
+    }catch(_){}
+    finally{ try{ activeRdr.releaseLock(); }catch(_){} activeRdr=null; }
   })();
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Serial — raw REPL execution
-// ─────────────────────────────────────────────────────────────────────────────
-const delay = ms => new Promise(r => setTimeout(r, ms));
+const delay = ms => new Promise(r => setTimeout(r,ms));
+async function serialWrite(s){ await sw.write(new TextEncoder().encode(s)); }
 
-async function serialWrite(str) {
-  await sw.write(new TextEncoder().encode(str));
-}
-
-// Poll rxBuf until `marker` appears or timeout expires.
-async function waitForInBuf(marker, timeout = 3000) {
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    if (new TextDecoder().decode(rxBuf).includes(marker)) return;
+async function waitForInBuf(marker, timeout=3000){
+  const deadline = Date.now()+timeout;
+  while(Date.now()<deadline){
+    if(new TextDecoder().decode(rxBuf).includes(marker)) return;
     await delay(30);
   }
-  const snapshot = new TextDecoder().decode(rxBuf).slice(-120);
-  throw new Error(`Timeout waiting for device (got: ${JSON.stringify(snapshot)})`);
+  const snap = new TextDecoder().decode(rxBuf).slice(-120);
+  throw new Error(`Timeout waiting for device (got: ${JSON.stringify(snap)})`);
 }
 
-// Poll until we have seen two 0x04 (EOT) bytes in rxBuf — marks end of
-// CircuitPython raw-REPL output (stdout\x04 + stderr\x04).
-async function waitForTwoEOT(timeout = 5000) {
-  const deadline = Date.now() + timeout;
-  while (Date.now() < deadline) {
-    let n = 0;
-    for (const b of rxBuf) { if (b === 0x04 && ++n === 2) return; }
+async function waitForTwoEOT(timeout=5000){
+  const deadline=Date.now()+timeout;
+  while(Date.now()<deadline){
+    let n=0;
+    for(const b of rxBuf){ if(b===0x04 && ++n===2) return; }
     await delay(30);
   }
-  throw new Error('Execution timed out waiting for device to finish');
+  throw new Error('Execution timed out');
 }
 
-async function execRaw(code) {
-  // ── 1. Interrupt running code ──────────────────────────────────────────
-  rxBuf = new Uint8Array(0);
+async function execRaw(code){
+  rxBuf=new Uint8Array(0);
   await serialWrite('\x03\x03');
   await delay(150);
-
-  // ── 2. Enter raw REPL, wait for prompt '>' ─────────────────────────────
-  rxBuf = new Uint8Array(0);
+  rxBuf=new Uint8Array(0);
   await serialWrite('\x01');
-  try {
-    await waitForInBuf('>');
-  } catch(_) {
-    throw new Error('Could not enter raw REPL — is CircuitPython running?');
-  }
-
-  // ── 3. Send code block, wait for 'OK' (execution started) ──────────────
-  rxBuf = new Uint8Array(0);
-  await serialWrite(code + '\x04');
-  try {
-    await waitForInBuf('OK', 2000);
-  } catch(_) {
-    throw new Error('Device did not acknowledge code — try reconnecting');
-  }
-
-  // ── 4. Wait for both EOT bytes (stdout done + stderr done) ─────────────
+  try{ await waitForInBuf('>'); } catch(_){ throw new Error('Could not enter raw REPL — is CircuitPython running?'); }
+  rxBuf=new Uint8Array(0);
+  await serialWrite(code+'\x04');
+  try{ await waitForInBuf('OK',2000); } catch(_){ throw new Error('Device did not acknowledge code'); }
   await waitForTwoEOT(5000);
-
-  // ── 5. Capture, exit raw REPL, parse ───────────────────────────────────
-  const raw = new TextDecoder().decode(rxBuf);
-  rxBuf = new Uint8Array(0);
+  const raw=new TextDecoder().decode(rxBuf);
+  rxBuf=new Uint8Array(0);
   await serialWrite('\x02');
   await delay(100);
-
-  const okIdx = raw.indexOf('OK');
-  const rest   = raw.slice(okIdx + 2);
-  const eot1   = rest.indexOf('\x04');
-  const stdout = eot1 >= 0 ? rest.slice(0, eot1) : rest;
-  const tail   = eot1 >= 0 ? rest.slice(eot1 + 1) : '';
-  const eot2   = tail.indexOf('\x04');
-  const stderr = (eot2 >= 0 ? tail.slice(0, eot2) : tail).trim();
-
-  if (stderr) throw new Error(stderr);
+  const okIdx=raw.indexOf('OK');
+  const rest=raw.slice(okIdx+2);
+  const e1=rest.indexOf('\x04');
+  const stdout=e1>=0?rest.slice(0,e1):rest;
+  const tail=e1>=0?rest.slice(e1+1):'';
+  const e2=tail.indexOf('\x04');
+  const stderr=(e2>=0?tail.slice(0,e2):tail).trim();
+  if(stderr) throw new Error(stderr);
   return stdout.trim();
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Device operations
+// Connection
 // ─────────────────────────────────────────────────────────────────────────────
-async function readDevice() {
-  const btn = document.getElementById('readBtn');
-  btn.disabled = true; btn.textContent = 'READING…';
-  tlog('Reading config.json…', 'info');
-  try {
-    const code = [
-      'try:',
-      '  import json,sys',
-      '  f=open("/config.json"); sys.stdout.write(f.read()); f.close()',
-      'except Exception as e:',
-      '  print("{}")',
-    ].join('\n');
-    const out = await execRaw(code);
-    const start = out.indexOf('{');
-    if (start !== -1) {
-      const loaded = JSON.parse(out.slice(start));
-      cfg = Object.assign(deepCopy(DEFAULTS), loaded);
-      renderAll();
-      tlog('Config loaded from device', 'ok');
-    } else {
-      tlog('No config.json found — showing firmware defaults', 'warn');
-    }
-  } catch(e) {
-    tlog('Read error: ' + e.message, 'error');
-  }
-  btn.disabled = false; btn.textContent = 'READ FROM DEVICE';
+async function toggleConnect(){
+  port ? await doDisconnect() : await doConnect();
 }
 
-async function saveDevice() {
-  const btn = document.getElementById('saveBtn');
-  btn.disabled = true; btn.textContent = 'SAVING…';
-  tlog('Writing config.json to device…', 'info');
-  try {
-    // Single-quote safe: our JSON values are numbers and known uppercase strings only
-    const json = JSON.stringify(cfg).replace(/'/g, "\\'");
-    const code = [
-      `f=open('/config.json','w')`,
-      `f.write('${json}')`,
-      `f.close()`,
-      `print('ok')`,
-    ].join('\n');
-    const out = await execRaw(code);
-    if (out.includes('ok')) {
-      tlog('Config saved successfully', 'ok');
-      tlog('Resetting device…', 'info');
-      try { await execRaw('import microcontroller\nmicrocontroller.reset()'); } catch(_) {}
-      tlog('Device restarted — new config is live', 'ok');
-    } else {
-      tlog('Unexpected response: ' + out, 'warn');
-    }
-  } catch(e) {
-    tlog('Save error: ' + e.message, 'error');
-    if (e.message.includes('Read-only') || e.message.includes('Errno 30')) {
-      tlog('Hint: unplug the device, then replug WITHOUT holding any key', 'warn');
-      tlog('Holding SW1 during boot shows the USB drive — normal boot hides it', 'warn');
+async function doConnect(){
+  const btn=document.getElementById('connectBtn');
+  btn.textContent='CONNECTING…'; btn.classList.add('pulsing'); btn.disabled=true;
+  try{
+    await serialConnect();
+    setConnected(true);
+    tlog('Device connected','ok');
+    tlog('Click "Read from Device" to load current config','info');
+  }catch(e){
+    tlog('Connection failed: '+e.message,'error');
+    btn.classList.remove('pulsing'); btn.textContent='CONNECT'; btn.disabled=false;
+    port=null;
+  }
+}
+
+async function doDisconnect(){
+  try{ await serialDisconnect(); }catch(_){}
+  setConnected(false);
+  tlog('Disconnected','warn');
+}
+
+function setConnected(on){
+  const btn=document.getElementById('connectBtn');
+  const pill=document.getElementById('statusPill');
+  btn.classList.remove('pulsing'); btn.disabled=false;
+  if(on){
+    btn.textContent='DISCONNECT'; btn.classList.add('danger');
+    pill.classList.add('live');
+    document.getElementById('statusTxt').textContent='CONNECTED';
+    document.getElementById('readBtn').disabled=false;
+    document.getElementById('saveBtn').disabled=false;
+  }else{
+    btn.textContent='CONNECT'; btn.classList.remove('danger');
+    pill.classList.remove('live');
+    document.getElementById('statusTxt').textContent='DISCONNECTED';
+    document.getElementById('readBtn').disabled=true;
+    document.getElementById('saveBtn').disabled=true;
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Device ops
+// ─────────────────────────────────────────────────────────────────────────────
+async function readDevice(){
+  const btn=document.getElementById('readBtn');
+  btn.disabled=true; btn.textContent='READING…';
+  tlog('Reading config.json…','info');
+  try{
+    const code=['try:','  import json,sys','  f=open("/config.json"); sys.stdout.write(f.read()); f.close()','except:','  print("{}")'].join('\n');
+    const out=await execRaw(code);
+    const s=out.indexOf('{');
+    if(s!==-1){
+      cfg=Object.assign(deepCopy(DEFAULTS),JSON.parse(out.slice(s)));
+      if(selectedKey!==null) renderConfigPanel();
+      renderBreathe(); renderSliders();
+      placeTargets();
+      tlog('Config loaded from device','ok');
+    }else{ tlog('No config.json found — showing defaults','warn'); }
+  }catch(e){ tlog('Read error: '+e.message,'error'); }
+  btn.disabled=false; btn.textContent='READ FROM DEVICE';
+}
+
+async function saveDevice(){
+  const btn=document.getElementById('saveBtn');
+  btn.disabled=true; btn.textContent='SAVING…';
+  tlog('Writing config.json…','info');
+  try{
+    const json=JSON.stringify(cfg).replace(/'/g,"\\'");
+    const code=[`f=open('/config.json','w')`,`f.write('${json}')`,`f.close()`,`print('ok')`].join('\n');
+    const out=await execRaw(code);
+    if(out.includes('ok')){
+      tlog('Config saved','ok');
+      tlog('Resetting device…','info');
+      try{ await execRaw('import microcontroller\nmicrocontroller.reset()'); }catch(_){}
+      tlog('Device restarted — new config is live','ok');
+    }else{ tlog('Unexpected: '+out,'warn'); }
+  }catch(e){
+    tlog('Save error: '+e.message,'error');
+    if(e.message.includes('Read-only')||e.message.includes('Errno 30')){
+      tlog('Hint: replug WITHOUT holding any key (normal boot = writable filesystem)','warn');
     }
   }
-  btn.disabled = false; btn.textContent = 'SAVE TO DEVICE';
+  btn.disabled=false; btn.textContent='SAVE TO DEVICE';
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Terminal log
 // ─────────────────────────────────────────────────────────────────────────────
-function tlog(msg, type = 'info') {
-  const el = document.getElementById('termBody');
-  const t = new Date().toTimeString().slice(0,8);
-  const row = document.createElement('div');
-  row.className = `log-entry ${type}`;
-  row.innerHTML = `<span class="log-t">${t}</span><span class="log-m">&gt; ${msg}</span>`;
-  el.appendChild(row);
-  el.scrollTop = el.scrollHeight;
+function tlog(msg, type='info'){
+  const el=document.getElementById('termBody');
+  const t=new Date().toTimeString().slice(0,8);
+  const row=document.createElement('div');
+  row.className=`log-entry ${type}`;
+  row.innerHTML=`<span class="log-t">${t}</span><span class="log-m">&gt; ${msg}</span>`;
+  el.appendChild(row); el.scrollTop=el.scrollHeight;
 }
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Event wiring
+// ─────────────────────────────────────────────────────────────────────────────
+document.getElementById('connectBtn').addEventListener('click', toggleConnect);
+document.getElementById('readBtn').addEventListener('click', readDevice);
+document.getElementById('saveBtn').addEventListener('click', saveDevice);
+
+[0,1,2].forEach(i => {
+  document.getElementById(`kt${i}`).addEventListener('click', () => selectKey(i));
+});
+
+document.getElementById('cfgAction').addEventListener('change', e => {
+  if(selectedKey===null) return;
+  cfg.keys[selectedKey]=parseVal(e.target.value);
+});
+
+document.getElementById('cfgColor').addEventListener('input', e => {
+  if(selectedKey===null) return;
+  const hex=e.target.value;
+  cfg.key_colors[selectedKey]=fromHex(hex);
+  document.getElementById('cfgSwatch').style.cssText=glowCSS(hex,7);
+  document.getElementById('cfgHex').textContent=hex.toUpperCase();
+  document.getElementById('cfgKeyLed').style.cssText=glowCSS(hex,10);
+  document.getElementById(`kd${selectedKey}`).style.cssText=glowCSS(hex,5);
+});
+
+document.getElementById('ledToggleBtn').addEventListener('click', () => {
+  const body=document.getElementById('ledBody');
+  const chev=document.getElementById('ledChevron');
+  const open=body.style.display==='none';
+  body.style.display=open?'':'none';
+  chev.classList.toggle('open',open);
+  if(open){ renderBreathe(); renderSliders(); }
+});
+
+document.getElementById('periodSlider').addEventListener('input', e => {
+  cfg.breathe_period=parseFloat(e.target.value);
+  document.getElementById('periodVal').textContent=cfg.breathe_period.toFixed(1)+'s';
+});
+document.getElementById('brightSlider').addEventListener('input', e => {
+  cfg.brightness=parseInt(e.target.value)/100;
+  document.getElementById('brightVal').textContent=e.target.value+'%';
+});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Init
 // ─────────────────────────────────────────────────────────────────────────────
-if (!('serial' in navigator)) {
-  document.getElementById('noSerial').style.display = 'flex';
+if(!('serial' in navigator)){
+  document.getElementById('noSerial').style.display='flex';
 }
-renderAll();
-tlog('Programmer ready', 'ok');
-tlog('Connect device via USB, then click CONNECT', 'info');
+initThree();
+tlog('Programmer ready','ok');
+tlog('Connect device via USB then click CONNECT','info');
 </script>
 </body>
 </html>
