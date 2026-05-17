@@ -1,165 +1,129 @@
 """
-Pigmy Corydora — 3-key macropad firmware (CircuitPython)
-Reads /config.json on boot; falls back to built-in defaults if missing.
-
-Pin map (from schematic):
-  SW1 → GP0   SW2 → GP1   SW3 → GP2
-  WS2812B data → GP3  (2 LEDs chained)
+Pigmy Corydora — RP2040-zero 3-key macropad firmware (CircuitPython)
+No external config and no LED dependencies.
 """
 
-import json
-import math
 import time
 
 import board
-import keypad
-import neopixel
-import usb_hid
-from adafruit_hid.consumer_control import ConsumerControl
-from adafruit_hid.consumer_control_code import ConsumerControlCode
-from adafruit_hid.keyboard import Keyboard
-from adafruit_hid.keycode import Keycode
 
-# ── Hardware ──────────────────────────────────────────────────────────────────
+try:
+    import keypad
+except Exception as exc:
+    keypad = None
+    print("CODE_WARN: keypad unavailable:", exc)
 
-SWITCH_PINS = (board.GP0, board.GP1, board.GP2)
-LED_PIN     = board.GP3
-NUM_LEDS    = 2
+try:
+    import usb_hid
+except Exception as exc:
+    usb_hid = None
+    print("CODE_WARN: usb_hid unavailable:", exc)
 
-# ── Code lookup tables ────────────────────────────────────────────────────────
+try:
+    from adafruit_hid.consumer_control import ConsumerControl
+    from adafruit_hid.consumer_control_code import ConsumerControlCode
+except Exception as exc:
+    ConsumerControl = None
+    ConsumerControlCode = None
+    print("CODE_WARN: consumer HID unavailable:", exc)
 
-CC_MAP = {
-    "MUTE":                 ConsumerControlCode.MUTE,
-    "VOLUME_INCREMENT":     ConsumerControlCode.VOLUME_INCREMENT,
-    "VOLUME_DECREMENT":     ConsumerControlCode.VOLUME_DECREMENT,
-    "PLAY_PAUSE":           ConsumerControlCode.PLAY_PAUSE,
-    "SCAN_NEXT_TRACK":      ConsumerControlCode.SCAN_NEXT_TRACK,
-    "SCAN_PREVIOUS_TRACK":  ConsumerControlCode.SCAN_PREVIOUS_TRACK,
-    "FAST_FORWARD":         ConsumerControlCode.FAST_FORWARD,
-    "REWIND":               ConsumerControlCode.REWIND,
-    "EJECT":                ConsumerControlCode.EJECT,
-    "BRIGHTNESS_INCREMENT": ConsumerControlCode.BRIGHTNESS_INCREMENT,
-    "BRIGHTNESS_DECREMENT": ConsumerControlCode.BRIGHTNESS_DECREMENT,
-}
+SWITCH_PIN_NAMES = ("GP0", "GP1", "GP2")
+NUM_KEYS = 3
+WARN_INTERVAL = 3.0
+_last_warn_ts = {}
 
-KEY_MAP = {
-    "A": Keycode.A, "B": Keycode.B, "C": Keycode.C, "D": Keycode.D,
-    "E": Keycode.E, "F": Keycode.F, "G": Keycode.G, "H": Keycode.H,
-    "I": Keycode.I, "J": Keycode.J, "K": Keycode.K, "L": Keycode.L,
-    "M": Keycode.M, "N": Keycode.N, "O": Keycode.O, "P": Keycode.P,
-    "Q": Keycode.Q, "R": Keycode.R, "S": Keycode.S, "T": Keycode.T,
-    "U": Keycode.U, "V": Keycode.V, "W": Keycode.W, "X": Keycode.X,
-    "Y": Keycode.Y, "Z": Keycode.Z,
-    "F1":  Keycode.F1,  "F2":  Keycode.F2,  "F3":  Keycode.F3,  "F4":  Keycode.F4,
-    "F5":  Keycode.F5,  "F6":  Keycode.F6,  "F7":  Keycode.F7,  "F8":  Keycode.F8,
-    "F9":  Keycode.F9,  "F10": Keycode.F10, "F11": Keycode.F11, "F12": Keycode.F12,
-    "SPACE":       Keycode.SPACE,       "ENTER":      Keycode.ENTER,
-    "TAB":         Keycode.TAB,         "ESCAPE":     Keycode.ESCAPE,
-    "BACKSPACE":   Keycode.BACKSPACE,   "DELETE":     Keycode.DELETE,
-    "UP_ARROW":    Keycode.UP_ARROW,    "DOWN_ARROW": Keycode.DOWN_ARROW,
-    "LEFT_ARROW":  Keycode.LEFT_ARROW,  "RIGHT_ARROW":Keycode.RIGHT_ARROW,
-    "HOME":        Keycode.HOME,        "END":        Keycode.END,
-    "PAGE_UP":     Keycode.PAGE_UP,     "PAGE_DOWN":  Keycode.PAGE_DOWN,
-    "PRINT_SCREEN":Keycode.PRINT_SCREEN,
-    "LEFT_CONTROL":  Keycode.LEFT_CONTROL,  "RIGHT_CONTROL": Keycode.RIGHT_CONTROL,
-    "LEFT_SHIFT":    Keycode.LEFT_SHIFT,    "RIGHT_SHIFT":   Keycode.RIGHT_SHIFT,
-    "LEFT_ALT":      Keycode.LEFT_ALT,      "RIGHT_ALT":     Keycode.RIGHT_ALT,
-    "LEFT_GUI":      Keycode.LEFT_GUI,      "RIGHT_GUI":     Keycode.RIGHT_GUI,
-}
 
-# ── Defaults (matches configurator/config.json) ───────────────────────────────
+def warn_once_every(key, message):
+    now = time.monotonic()
+    last = _last_warn_ts.get(key, -1.0e9)
+    if now - last >= WARN_INTERVAL:
+        _last_warn_ts[key] = now
+        print(message)
 
-DEFAULTS = {
-    "keys": [
-        {"type": "cc",  "code": "MUTE",              "modifiers": []},
-        {"type": "cc",  "code": "VOLUME_DECREMENT",  "modifiers": []},
-        {"type": "cc",  "code": "VOLUME_INCREMENT",  "modifiers": []},
-    ],
-    "key_colors":     [[255, 40, 40], [40, 100, 255], [40, 220, 80]],
-    "breathe_colors": [[180, 40, 40], [40, 180, 40],  [40, 40, 180]],
-    "breathe_period": 2.0,
-    "brightness":     0.25,
-}
 
-# ── Config loading ────────────────────────────────────────────────────────────
+def resolve_switch_pins():
+    pins = []
+    for name in SWITCH_PIN_NAMES:
+        pin = getattr(board, name, None)
+        if pin is None:
+            print("CODE_WARN: missing switch pin", name)
+            return None
+        pins.append(pin)
+    return tuple(pins)
 
-def load_config():
+
+HAS_KEYS = False
+HAS_CC = False
+keys = None
+cc = None
+
+switch_pins = resolve_switch_pins()
+if keypad is not None and switch_pins is not None:
     try:
-        with open("/config.json", "r") as f:
-            cfg = json.load(f)
-        for k, v in DEFAULTS.items():
-            if k not in cfg:
-                cfg[k] = v
-        return cfg
-    except (OSError, ValueError):
-        return dict(DEFAULTS)
+        keys = keypad.Keys(switch_pins, value_when_pressed=False, pull=True)
+        HAS_KEYS = True
+    except Exception as exc:
+        print("CODE_WARN: keypad init failed:", exc)
+else:
+    if keypad is None:
+        print("CODE_WARN: keypad module unavailable; key scan disabled")
 
-def parse_keymap(cfg):
-    result = []
-    for k in cfg["keys"]:
-        t         = k.get("type", "cc")
-        code_name = k.get("code", "MUTE")
-        mods      = [KEY_MAP[m] for m in k.get("modifiers", []) if m in KEY_MAP]
-        if t == "cc":
-            result.append(("cc",  CC_MAP.get(code_name, ConsumerControlCode.MUTE), []))
-        else:
-            result.append(("key", KEY_MAP.get(code_name, Keycode.A), mods))
-    return result
+if usb_hid is not None and ConsumerControl is not None:
+    try:
+        cc = ConsumerControl(usb_hid.devices)
+        HAS_CC = True
+    except Exception as exc:
+        print("CODE_WARN: consumer control init failed:", exc)
 
-# ── Init ──────────────────────────────────────────────────────────────────────
+# Fixed 3-key map:
+# GP0 -> MUTE
+# GP1 -> VOLUME_INCREMENT
+# GP2 -> VOLUME_DECREMENT
+KEYMAP = (None, None, None)
+if ConsumerControlCode is not None:
+    KEYMAP = (
+        ConsumerControlCode.MUTE,
+        ConsumerControlCode.VOLUME_INCREMENT,
+        ConsumerControlCode.VOLUME_DECREMENT,
+    )
 
-cfg            = load_config()
-KEYMAP         = parse_keymap(cfg)
-KEY_COLORS     = [tuple(c) for c in cfg["key_colors"]]
-BREATHE_COLORS = [tuple(c) for c in cfg["breathe_colors"]]
-BREATHE_PERIOD = float(cfg["breathe_period"])
+if not HAS_KEYS:
+    print("CODE_WARN: keys unavailable; entering safe idle loop")
+    while True:
+        time.sleep(0.1)
 
-keys = keypad.Keys(SWITCH_PINS, value_when_pressed=False, pull=True)
-leds = neopixel.NeoPixel(LED_PIN, NUM_LEDS, brightness=float(cfg["brightness"]), auto_write=False)
-kbd  = Keyboard(usb_hid.devices)
-cc   = ConsumerControl(usb_hid.devices)
-
-# ── Helpers ───────────────────────────────────────────────────────────────────
-
-FLASH_COLOR = (200, 200, 200)
-
-def breathe_color():
-    t     = time.monotonic()
-    scale = math.sin(math.pi * (t % BREATHE_PERIOD) / BREATHE_PERIOD) ** 2
-    idx   = int(t / BREATHE_PERIOD) % len(BREATHE_COLORS)
-    r, g, b = BREATHE_COLORS[idx]
-    return (int(r * scale), int(g * scale), int(b * scale))
-
-# ── Main loop ─────────────────────────────────────────────────────────────────
-
-held_key = None
+held_keys = [False] * NUM_KEYS
+held_action_types = [None] * NUM_KEYS
+warned_hid_cc_unavailable = False
 
 while True:
     event = keys.events.get()
+    if not event:
+        continue
 
-    if event:
-        n                      = event.key_number
-        act_type, act_code, act_mods = KEYMAP[n]
+    n = event.key_number
+    if n < 0 or n >= len(KEYMAP):
+        warn_once_every("bad_key_index", "CODE_WARN: key index out of range")
+        continue
 
-        if event.pressed:
-            held_key = n
-            leds.fill(FLASH_COLOR)
-            leds.show()
-            leds.fill(KEY_COLORS[n])
-            leds.show()
-            if act_type == "cc":
+    if event.pressed:
+        held_keys[n] = True
+        held_action_types[n] = "cc"
+        act_code = KEYMAP[n]
+        if HAS_CC and act_code is not None:
+            try:
                 cc.press(act_code)
-            else:
-                if act_mods:
-                    kbd.press(*act_mods)
-                kbd.press(act_code)
+            except Exception as exc:
+                warn_once_every("cc_press", "CODE_WARN: CC press failed: %s" % exc)
         else:
-            held_key = None
-            if act_type == "cc":
+            if not warned_hid_cc_unavailable:
+                warned_hid_cc_unavailable = True
+                print("CODE_WARN: HID unavailable for cc action")
+    else:
+        held_keys[n] = False
+        if held_action_types[n] == "cc" and HAS_CC:
+            try:
                 cc.release()
-            else:
-                kbd.release_all()
-
-    if held_key is None:
-        leds.fill(breathe_color())
-        leds.show()
+            except Exception as exc:
+                warn_once_every("cc_release", "CODE_WARN: CC release failed: %s" % exc)
+        held_action_types[n] = None

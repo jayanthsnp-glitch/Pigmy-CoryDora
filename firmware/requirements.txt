@@ -3,4 +3,3 @@
 # Bundle: https://circuitpython.org/libraries
 
 adafruit_hid
-neopixel
